@@ -1,0 +1,51 @@
+================================================================
+                    H-HUB PROJECT RUN GUIDE
+================================================================
+
+🚀 QUICK START
+-------------------
+Simply double-click the file named:
+    START_SYSTEM.bat
+This will open two terminal windows and start everything for you!
+
+
+🛠️ MANUAL START (If the .bat file doesn't work)
+-------------------
+1. Open a terminal, go to the 'server' folder:
+   cd server
+   npm start
+
+2. Open ANOTHER terminal in the main folder:
+   npm run dev
+
+
+🔑 LOGIN CREDENTIALS
+-------------------
+ADMIN ACCESS (Super User):
+  - Email:    admin@hhub.com
+  - Password: admin789
+
+TEST USER ACCESS:
+  - Email:    test@example.com
+  - Password: password
+
+SELLER ACCESS (Test Merchant):
+  - Add via Admin Panel -> Sellers -> "Add Seller"
+
+💡 NOTE: For Password Reset testing, use the above accounts OR register a new one first!
+
+
+🌐 PROJECT LINKS
+-------------------
+Website Home: http://localhost:5173
+Admin Dashboard: http://localhost:5173/admin/dashboard
+Backend API: http://localhost:5000/api/health
+
+
+⚠️ TROUBLESHOOTING
+-------------------
+- If 'npm' is not recognized, make sure Node.js is installed.
+- On Windows, if you see "Scripts disabled", use: 'npm.cmd run dev'
+- If Port 5000 is busy, restart your computer or kill existing node processes.
+
+================================================================

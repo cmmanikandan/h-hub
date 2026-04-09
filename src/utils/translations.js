@@ -1,0 +1,40 @@
+export const translations = {
+    EN: {
+        welcome: "Welcome Back",
+        shoppingFuture: "Experience the Future of Shopping",
+        shopNow: "Start Shopping",
+        sellOn: "Sell on H-Hub",
+        home: "Home",
+        shop: "Shop",
+        dashboard: "Dashboard",
+        login: "Sign In",
+        explore: "Explore Our Catalog",
+        cart: "Shopping Bag",
+        checkout: "Checkout",
+        premiumGadgets: "Premium gadgets curated for the next generation.",
+        filters: "Filters",
+        category: "Category",
+        all: "All",
+        price: "Price",
+        search: "Search products..."
+    },
+    TA: {
+        welcome: "மீண்டும் வருக",
+        shoppingFuture: "ஷாப்பிங்கின் எதிர்காலத்தை அனுபவியுங்கள்",
+        shopNow: "வாங்கத் தொடங்குங்கள்",
+        sellOn: "விற்பனையாளராக சேருங்கள்",
+        home: "முகப்பு",
+        shop: "கடை",
+        dashboard: "டாஷ்போர்டு",
+        login: "உள்நுழை",
+        explore: "எங்கள் தயாரிப்புகளை ஆராயுங்கள்",
+        cart: "கூடை",
+        checkout: "செக்அவுட்",
+        premiumGadgets: "அடுத்த தலைமுறைக்கான பிரீமியம் கேஜெட்டுகள்.",
+        filters: "வடிப்பான்கள்",
+        category: "வகை",
+        all: "அனைத்தும்",
+        price: "விலை",
+        search: "தேடுக..."
+    }
+};
