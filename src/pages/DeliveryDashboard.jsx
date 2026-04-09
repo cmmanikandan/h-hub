@@ -1885,7 +1885,7 @@ const DeliveryDashboard = () => {
 
 // Styles (Matching Admin Dashboard)
 const dashboardContainer = { display: 'flex', minHeight: '100dvh', width: '100%', background: '#f1f5f9', overflow: 'hidden' };
-const sidebar = { width: '280px', background: 'linear-gradient(180deg, #064e3b 0%, #022c22 100%)', display: 'flex', flexDirection: 'column', padding: '2rem 1.5rem', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)' };
+const sidebar = { width: '280px', background: 'linear-gradient(180deg, #064e3b 0%, #022c22 100%)', display: 'flex', flexDirection: 'column', padding: '2rem 1.5rem', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' };
 const logoWrapper = { display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '3rem', paddingLeft: '0.5rem' };
 const logoIcon = { width: '42px', height: '42px', background: 'linear-gradient(135deg, #10b981, #059669)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3)' };
 const logoText = { color: '#fff', fontSize: '1.25rem', fontWeight: 900, letterSpacing: '-0.025em' };

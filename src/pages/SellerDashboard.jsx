@@ -2612,7 +2612,7 @@ const SellerDashboard = () => {
 
 // Styles (Matching Admin Dashboard)
 const dashboardContainer = { display: 'flex', minHeight: '100dvh', width: '100%', background: '#f8fafc', overflow: 'hidden' };
-const sidebar = { width: '280px', background: '#0f172a', display: 'flex', flexDirection: 'column', padding: '2rem 1.5rem', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)', overflowY: 'auto', overflowX: 'hidden' };
+const sidebar = { width: '280px', background: '#0f172a', display: 'flex', flexDirection: 'column', padding: '2rem 1.5rem', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' };
 const logoWrapper = { display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '3rem', paddingLeft: '0.5rem' };
 const logoIcon = { width: '42px', height: '42px', background: 'var(--primary)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 16px rgba(37, 99, 235, 0.3)' };
 const logoText = { color: '#fff', fontSize: '1.4rem', fontWeight: 900, letterSpacing: '-0.5px' };

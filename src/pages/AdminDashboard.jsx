@@ -5934,7 +5934,7 @@ const container = { minHeight: '100dvh', display: 'flex', flexDirection: 'column
 const layout = { flex: 1, display: 'flex', overflow: 'hidden' };
 
 // Sidebar
-const sidebar = { width: '280px', background: '#0f172a', display: 'flex', flexDirection: 'column', padding: '1.5rem', flexShrink: 0, color: '#fff', overflowY: 'auto', overflowX: 'hidden', borderRight: '1px solid rgba(255,255,255,0.05)' };
+const sidebar = { width: '280px', background: '#0f172a', display: 'flex', flexDirection: 'column', padding: '1.5rem', flexShrink: 0, color: '#fff', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', borderRight: '1px solid rgba(255,255,255,0.05)' };
 const logoSection = { display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem 0', marginBottom: '3rem' };
 const logoIcon = { background: 'var(--primary)', padding: '0.6rem', borderRadius: '14px', boxShadow: '0 8px 16px rgba(37, 99, 235, 0.3)' };
 const logoText = { fontWeight: 900, fontSize: '1.4rem', letterSpacing: '-0.5px', color: 'white' };

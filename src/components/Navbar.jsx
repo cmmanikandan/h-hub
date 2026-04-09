@@ -327,7 +327,7 @@ const loginBtnLink = { fontWeight: 700, color: 'var(--text-main)', fontSize: '0.
 const registerBtn = { background: 'linear-gradient(130deg, var(--primary), var(--accent))', color: 'white', padding: '0.62rem 1.3rem', borderRadius: '11px', fontWeight: 800, fontSize: '0.9rem', boxShadow: '0 14px 28px -20px rgba(15, 118, 110, 0.95)' };
 
 const mobileMenuBtn = { display: 'none', padding: '0.5rem', color: 'var(--text-main)' };
-const mobileSidebar = { position: 'fixed', top: 0, right: 0, width: '82%', height: '100vh', background: 'linear-gradient(180deg, #ffffff, #f3fbfd)', zIndex: 2000, boxShadow: '-18px 0 42px -26px rgba(15,23,42,0.8)', padding: '2rem', borderLeft: '1px solid rgba(8,145,178,0.16)' };
+const mobileSidebar = { position: 'fixed', top: 0, right: 0, width: '82%', height: '100vh', maxHeight: '100dvh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', background: 'linear-gradient(180deg, #ffffff, #f3fbfd)', zIndex: 2000, boxShadow: '-18px 0 42px -26px rgba(15,23,42,0.8)', padding: '2rem', borderLeft: '1px solid rgba(8,145,178,0.16)' };
 const mobileHeader = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' };
 const mobileLinks = { display: 'flex', flexDirection: 'column', gap: '1.5rem' };
 const mobileLink = { fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-main)', textAlign: 'left', background: 'none', border: 'none', padding: '1rem' };
