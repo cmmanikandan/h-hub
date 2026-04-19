@@ -1,0 +1,25 @@
+databases:
+  - name: h-hub-db
+    plan: free
+
+services:
+  - type: web
+    name: h-hub-api
+    env: node
+    plan: free
+    rootDir: server
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_DIALECT
+        value: postgres
+      - key: DATABASE_URL
+        fromDatabase:
+          name: h-hub-db
+          property: connectionString
+      - key: ALLOWED_ORIGINS
+        value: https://h-hub-xi.vercel.app
