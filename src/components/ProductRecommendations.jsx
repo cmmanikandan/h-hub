@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, ShoppingCart, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/authContext';
 
 const ProductRecommendations = ({ currentProduct, allProducts = [] }) => {
     const navigate = useNavigate();

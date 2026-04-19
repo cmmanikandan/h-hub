@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/authContext';
 import { Tag, Copy, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 

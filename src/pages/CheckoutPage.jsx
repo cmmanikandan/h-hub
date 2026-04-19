@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, CreditCard, Wallet, Building2, ChevronRight, Edit3, Plus, Check, ArrowLeft, ShieldCheck, Truck, Star } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/authContext';
 import Toast from '../components/Toast';
 import { statesAndDistricts } from '../utils/indianStates';
 import api from '../utils/api';

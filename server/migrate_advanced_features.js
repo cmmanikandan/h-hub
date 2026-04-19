@@ -1,17 +1,17 @@
-    import sqlite3 from 'sqlite3';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { sequelize } from './db.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dbPath = path.join(__dirname, 'hub_db.sqlite');
-
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {show 
-        console.error('❌ Error opening database:', err);
-        process.exit(1);
+const isPostgres = (process.env.DB_DIALECT || '').toLowerCase() === 'postgres';
+const normalizeSql = (sql) => {
+    if (!isPostgres) {
+        return sql;
     }
-    console.log('✅ Connected to database');
-});
+
+    return sql
+        .replace(/\bDATETIME\b/g, 'TIMESTAMP')
+        .replace(/ALTER TABLE\s+([A-Za-z_][A-Za-z0-9_]*)/g, 'ALTER TABLE "$1"')
+        .replace(/CREATE TABLE IF NOT EXISTS\s+([A-Za-z_][A-Za-z0-9_]*)/g, 'CREATE TABLE IF NOT EXISTS "$1"')
+        .replace(/REFERENCES\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/g, 'REFERENCES "$1"(');
+};
 
 // ========================================
 // ADD COLUMNS TO EXISTING TABLES
@@ -425,56 +425,56 @@ const createTableSQL = [
     )`,
 ];
 
-// Execute all SQL statements
-let completed = 0;
 const totalSQL = alterOrderTable.length + alterDeliveryManTable.length + alterUsersTable.length + createTableSQL.length;
 
-function executeSQL(sql, description) {
-    db.run(sql, (err) => {
-        if (err) {
-            if (err.message.includes('duplicate column')) {
-                console.log(`⏭️  ${description}: Already exists`);
-            } else {
-                console.error(`❌ ${description}:`, err.message);
-            }
+async function executeSQL(sql, description) {
+    try {
+        await sequelize.query(normalizeSql(sql));
+        console.log(`✅ ${description}`);
+    } catch (error) {
+        if (error.message.includes('duplicate column') || error.message.includes('already exists')) {
+            console.log(`⏭️  ${description}: Already exists`);
         } else {
-            console.log(`✅ ${description}`);
+            console.error(`❌ ${description}:`, error.message);
         }
-
-        completed++;
-        if (completed === totalSQL) {
-            console.log('\n' + '='.repeat(50));
-            console.log('✅ MIGRATION COMPLETED SUCCESSFULLY!');
-            console.log('='.repeat(50));
-            console.log(`📊 Total operations: ${totalSQL}`);
-            console.log('🗄️  All 28 tables created + columns added');
-            console.log('='.repeat(50) + '\n');
-            db.close();
-            process.exit(0);
-        }
-    });
+    }
 }
 
-// Execute ALTER TABLE for Order
-console.log('\n📋 Adding columns to Orders table...');
-alterOrderTable.forEach((sql, i) => {
-    executeSQL(sql, `Order Column ${i + 1}`);
-});
+async function runMigration() {
+    await sequelize.authenticate();
+    console.log('✅ Connected to database');
 
-// Execute ALTER TABLE for DeliveryMan
-console.log('📋 Adding columns to DeliveryMen table...');
-alterDeliveryManTable.forEach((sql, i) => {
-    executeSQL(sql, `DeliveryMan Column ${i + 1}`);
-});
+    console.log('\n📋 Adding columns to Orders table...');
+    for (let index = 0; index < alterOrderTable.length; index++) {
+        await executeSQL(alterOrderTable[index], `Order Column ${index + 1}`);
+    }
 
-// Execute ALTER TABLE for Users
-console.log('📋 Adding columns to Users table...');
-alterUsersTable.forEach((sql, i) => {
-    executeSQL(sql, `Users Column ${i + 1}`);
-});
+    console.log('📋 Adding columns to DeliveryMen table...');
+    for (let index = 0; index < alterDeliveryManTable.length; index++) {
+        await executeSQL(alterDeliveryManTable[index], `DeliveryMan Column ${index + 1}`);
+    }
 
-// Create all new tables
-console.log('🗄️  Creating new tables...');
-createTableSQL.forEach((sql, i) => {
-    executeSQL(sql, `Table ${i + 1}/28`);
+    console.log('📋 Adding columns to Users table...');
+    for (let index = 0; index < alterUsersTable.length; index++) {
+        await executeSQL(alterUsersTable[index], `Users Column ${index + 1}`);
+    }
+
+    console.log('🗄️  Creating new tables...');
+    for (let index = 0; index < createTableSQL.length; index++) {
+        await executeSQL(createTableSQL[index], `Table ${index + 1}/28`);
+    }
+
+    console.log('\n' + '='.repeat(50));
+    console.log('✅ MIGRATION COMPLETED SUCCESSFULLY!');
+    console.log('='.repeat(50));
+    console.log(`📊 Total operations: ${totalSQL}`);
+    console.log('🗄️  All 28 tables created + columns added');
+    console.log('='.repeat(50) + '\n');
+    await sequelize.close();
+}
+
+runMigration().catch(async (error) => {
+    console.error('❌ Migration failed:', error.message);
+    await sequelize.close();
+    process.exit(1);
 });

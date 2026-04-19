@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { translations } from '../utils/translations';
+import { useAuth } from '../context/authContext';
 import {
     ShoppingBag,
     User,
@@ -17,7 +16,7 @@ import {
     ChevronDown,
     ShoppingCart
 } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion as Motion } from 'framer-motion';
 import NotificationCenter from './NotificationCenter';
 
 const Navbar = () => {
@@ -66,7 +65,13 @@ const Navbar = () => {
         }
     };
 
-    const t = translations[lang];
+    const normalizedRole = (() => {
+        const value = String(user?.role || '').toLowerCase();
+        if (['hlogix', 'hlogix_admin', 'logix', 'logixadmin', 'logix_admin'].includes(value)) {
+            return 'logix_admin';
+        }
+        return value;
+    })();
 
     return (
         <nav style={navStyle}>
@@ -134,7 +139,7 @@ const Navbar = () => {
 
                             <AnimatePresence>
                                 {isOpen && (
-                                    <motion.div
+                                    <Motion.div
                                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -155,17 +160,18 @@ const Navbar = () => {
                                             <Link to="/user/wishlist" style={dropItem} onClick={() => setIsOpen(false)}>❤️ Wishlist</Link>
                                             <Link to="/user/wallet" style={dropItem} onClick={() => setIsOpen(false)}>💳 Wallet</Link>
 
-                                            {user.role !== 'user' && <div style={dropDivider} />}
-                                            {user.role === 'admin' && <Link to="/admin" style={dropItemDash} onClick={() => setIsOpen(false)}>Admin Panel</Link>}
-                                            {user.role === 'seller' && <Link to="/seller" style={dropItemDash} onClick={() => setIsOpen(false)}>Seller Hub</Link>}
-                                            {user.role === 'delivery' && <Link to="/delivery" style={dropItemDash} onClick={() => setIsOpen(false)}>Rider Panel</Link>}
+                                            {normalizedRole !== 'user' && <div style={dropDivider} />}
+                                            {normalizedRole === 'admin' && <Link to="/admin" style={dropItemDash} onClick={() => setIsOpen(false)}>Admin Panel</Link>}
+                                            {normalizedRole === 'seller' && <Link to="/seller" style={dropItemDash} onClick={() => setIsOpen(false)}>Seller Hub</Link>}
+                                            {normalizedRole === 'delivery' && <Link to="/delivery" style={dropItemDash} onClick={() => setIsOpen(false)}>Rider Panel</Link>}
+                                            {normalizedRole === 'logix_admin' && <Link to="/logix" style={dropItemDash} onClick={() => setIsOpen(false)}>H-LOGIX Panel</Link>}
                                         </div>
 
                                         <div style={dropDivider} />
                                         <button style={logoutBtn} onClick={() => { logout(); setIsOpen(false); }}>
                                             <LogOut size={16} /> Sign Out
                                         </button>
-                                    </motion.div>
+                                    </Motion.div>
                                 )}
                             </AnimatePresence>
                         </div>
@@ -208,10 +214,11 @@ const Navbar = () => {
             {/* Mobile Sidebar Menu */}
             <AnimatePresence>
                 {isMobileMenuOpen && (
-                    <motion.div
+                    <Motion.div
                         initial={{ x: '100%' }}
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
+                        className="mobile-sidebar-scroll"
                         style={mobileSidebar}
                     >
                         <div style={mobileHeader}>
@@ -236,6 +243,10 @@ const Navbar = () => {
                                     <p style={{ padding: '0 1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{user.email}</p>
                                     <Link to="/user/profile" style={mobileLink} onClick={() => setIsMobileMenuOpen(false)}>Profile</Link>
                                     <Link to="/user/orders" style={mobileLink} onClick={() => setIsMobileMenuOpen(false)}>Orders</Link>
+                                    {normalizedRole === 'admin' && <Link to="/admin" style={mobileLink} onClick={() => setIsMobileMenuOpen(false)}>Admin Panel</Link>}
+                                    {normalizedRole === 'seller' && <Link to="/seller" style={mobileLink} onClick={() => setIsMobileMenuOpen(false)}>Seller Hub</Link>}
+                                    {normalizedRole === 'delivery' && <Link to="/delivery" style={mobileLink} onClick={() => setIsMobileMenuOpen(false)}>Rider Panel</Link>}
+                                    {normalizedRole === 'logix_admin' && <Link to="/logix" style={mobileLink} onClick={() => setIsMobileMenuOpen(false)}>H-LOGIX Panel</Link>}
                                     <button style={mobileLink} onClick={() => { logout(); setIsMobileMenuOpen(false); }}>Sign Out</button>
                                 </>
                             )}
@@ -262,7 +273,7 @@ const Navbar = () => {
                                 </button>
                             )}
                         </div>
-                    </motion.div>
+                    </Motion.div>
                 )}
             </AnimatePresence>
         </nav>
@@ -327,7 +338,7 @@ const loginBtnLink = { fontWeight: 700, color: 'var(--text-main)', fontSize: '0.
 const registerBtn = { background: 'linear-gradient(130deg, var(--primary), var(--accent))', color: 'white', padding: '0.62rem 1.3rem', borderRadius: '11px', fontWeight: 800, fontSize: '0.9rem', boxShadow: '0 14px 28px -20px rgba(15, 118, 110, 0.95)' };
 
 const mobileMenuBtn = { display: 'none', padding: '0.5rem', color: 'var(--text-main)' };
-const mobileSidebar = { position: 'fixed', top: 0, right: 0, width: '82%', height: '100vh', maxHeight: '100dvh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', background: 'linear-gradient(180deg, #ffffff, #f3fbfd)', zIndex: 2000, boxShadow: '-18px 0 42px -26px rgba(15,23,42,0.8)', padding: '2rem', borderLeft: '1px solid rgba(8,145,178,0.16)' };
+const mobileSidebar = { position: 'fixed', top: 0, right: 0, width: '82%', height: '100vh', maxHeight: '100dvh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin', scrollbarColor: 'rgba(8,145,178,0.55) rgba(226,232,240,0.7)', background: 'linear-gradient(180deg, #ffffff, #f3fbfd)', zIndex: 2000, boxShadow: '-18px 0 42px -26px rgba(15,23,42,0.8)', padding: '2rem', borderLeft: '1px solid rgba(8,145,178,0.16)' };
 const mobileHeader = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' };
 const mobileLinks = { display: 'flex', flexDirection: 'column', gap: '1.5rem' };
 const mobileLink = { fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-main)', textAlign: 'left', background: 'none', border: 'none', padding: '1rem' };

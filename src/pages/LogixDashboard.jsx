@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/authContext';
 import {
     Menu, X, Bell, Globe, LogOut, ArrowLeft, Power, Truck, ShoppingBag,
     PieChart, Users, CreditCard, TrendingUp, Plus, Edit2, Trash2, Search,
@@ -2296,12 +2296,14 @@ const LogixDashboard = () => {
                     </div>
                 </div>
 
-                <nav style={{
+                <nav className="dashboard-sidebar-scroll" style={{
                     flex: 1,
                     overflowY: 'auto',
                     overflowX: 'hidden',
                     paddingRight: 8,
-                    scrollBehavior: 'smooth'
+                    scrollBehavior: 'smooth',
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: 'rgba(248, 113, 113, 0.7) rgba(17, 24, 39, 0.25)'
                 }}>
                     {[
                         { id: 'overview', label: 'Dashboard', icon: PieChart },

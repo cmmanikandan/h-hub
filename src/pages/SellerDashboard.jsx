@@ -35,7 +35,8 @@ import {
     MapPin,
     Check,
     Calendar, // Added Calendar icon
-    Menu
+    Menu,
+    Sparkles
 } from 'lucide-react';
 import SmartCalendar from '../components/SmartCalendar'; // Import Calendar Component
 import AIImageEditor from '../components/AIImageEditor'; // Import AI Image Editor
@@ -48,7 +49,7 @@ import {
     Tooltip,
     ResponsiveContainer
 } from 'recharts';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/authContext';
 import api from '../utils/api';
 import StatusPopup from '../components/StatusPopup';
 
@@ -1021,10 +1022,14 @@ const SellerDashboard = () => {
             {/* Dark Sidebar */}
             <aside style={{
                 ...sidebar,
-                position: isMobile ? 'fixed' : 'relative',
-                transform: isMobile && !showSidebar ? 'translateX(-100%)' : 'none',
-                zIndex: 200,
-                width: isMobile ? '280px' : '280px',
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                bottom: 0,
+                transform: isMobile && !showSidebar ? 'translateX(-100%)' : 'translateX(0)',
+                zIndex: isMobile ? 200 : 120,
+                width: '280px',
+                height: '100vh',
                 boxShadow: isMobile && showSidebar ? '0 0 40px rgba(0,0,0,0.5)' : 'none',
                 transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
             }}>
@@ -1038,6 +1043,7 @@ const SellerDashboard = () => {
                     )}
                 </div>
 
+                <div className="dashboard-sidebar-scroll" style={sidebarNavScroll}>
                 <div style={navSection}>
                     <span style={navLabel}>MAIN CONTROL</span>
                     <div style={navGroup}>
@@ -1062,6 +1068,7 @@ const SellerDashboard = () => {
                         <button onClick={() => setActiveTab('settings')} style={activeTab === 'settings' ? activeNav : navBtn}><Settings size={18} /> Settings</button>
                     </div>
                 </div>
+                </div>
 
                 <div style={sidebarFooter}>
                     <div style={profileInSidebar}>
@@ -1084,7 +1091,12 @@ const SellerDashboard = () => {
                 <div onClick={() => setShowSidebar(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 199, backdropFilter: 'blur(2px)' }} />
             )}
 
-            <main style={content}>
+            <main style={{
+                ...content,
+                marginLeft: isMobile ? 0 : '280px',
+                width: isMobile ? '100%' : 'calc(100% - 280px)',
+                overflow: 'hidden'
+            }}>
                 <header style={{ ...topBar, padding: isMobile ? '0 1rem' : '0 3rem' }}>
                     <div style={topBarLeft}>
                         {isMobile && (
@@ -1135,7 +1147,7 @@ const SellerDashboard = () => {
                     </div>
                 </header>
 
-                <div style={scrollArea}>
+                <div style={{ ...scrollArea, overflowY: isMobile && showSidebar ? 'hidden' : 'auto' }}>
                     <AnimatePresence mode="wait">
                         {activeTab === 'overview' && (
                             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={pane}>
@@ -1203,6 +1215,7 @@ const SellerDashboard = () => {
                                             <button style={actionBtn} onClick={() => setActiveTab('inventory')}><Package size={18} /> Update Stock Level</button>
                                             <button style={actionBtn}><Download size={18} /> Export Sales Report</button>
                                             <button style={actionBtn} onClick={() => setActiveTab('finance')}><Wallet size={18} /> Payout Settings</button>
+                                            <button style={actionBtn} onClick={() => navigate('/innovations')}><Sparkles size={18} /> Open Innovation Hub</button>
                                         </div>
                                     </div>
                                 </div>
@@ -2612,7 +2625,8 @@ const SellerDashboard = () => {
 
 // Styles (Matching Admin Dashboard)
 const dashboardContainer = { display: 'flex', minHeight: '100dvh', width: '100%', background: '#f8fafc', overflow: 'hidden' };
-const sidebar = { width: '280px', background: '#0f172a', display: 'flex', flexDirection: 'column', padding: '2rem 1.5rem', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' };
+const sidebar = { width: '280px', background: '#0f172a', display: 'flex', flexDirection: 'column', padding: '2rem 1.5rem', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' };
+const sidebarNavScroll = { flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin', scrollbarColor: 'rgba(148,163,184,0.65) rgba(15,23,42,0.4)', paddingRight: '0.25rem' };
 const logoWrapper = { display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '3rem', paddingLeft: '0.5rem' };
 const logoIcon = { width: '42px', height: '42px', background: 'var(--primary)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 16px rgba(37, 99, 235, 0.3)' };
 const logoText = { color: '#fff', fontSize: '1.4rem', fontWeight: 900, letterSpacing: '-0.5px' };
@@ -2629,7 +2643,7 @@ const profName = { fontSize: '0.85rem', fontWeight: 800 };
 const profRole = { fontSize: '0.7rem', fontWeight: 600 };
 const logoutBtnSidebar = { ...navBtn, color: '#ef4444', background: 'rgba(239, 68, 68, 0.05)' };
 const backToHubBtn = { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', background: 'none', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', color: '#94a3b8' };
-const content = { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#f8fafc' };
+const content = { flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden', background: '#f8fafc' };
 const topBar = { height: '80px', background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(226, 232, 240, 0.8)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 3rem', flexShrink: 0 };
 const topBarLeft = { display: 'flex', alignItems: 'center', gap: '1rem' };
 const topBarRight = { display: 'flex', alignItems: 'center', gap: '1.5rem' };
@@ -2638,7 +2652,7 @@ const sInput = { background: 'none', border: 'none', outline: 'none', fontSize: 
 const topNavBtn = { display: 'flex', alignItems: 'center', gap: '0.6rem', background: '#f8fafc', border: '1px solid #e2e8f0', cursor: 'pointer', color: '#3b82f6', fontWeight: 800, fontSize: '0.8rem', padding: '0.5rem 1rem', borderRadius: '10px' };
 const vDivider = { width: '1px', height: '24px', background: '#e2e8f0' };
 const sellerBadge = { background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7', padding: '0.35rem 0.85rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.5px', border: '1px solid rgba(168, 85, 247, 0.2)' };
-const scrollArea = { flex: 1, overflowY: 'auto', padding: '2rem 3rem' };
+const scrollArea = { flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '2rem 3rem' };
 const pane = { display: 'flex', flexDirection: 'column' };
 const adminPageHeader = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' };
 const headerInfo = { display: 'flex', flexDirection: 'column', gap: '0.25rem' };

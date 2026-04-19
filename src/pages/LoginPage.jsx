@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { motion } from 'framer-motion';
+import { useAuth } from '../context/authContext';
+import { motion as Motion } from 'framer-motion';
 import {
     LogIn,
     Mail,
@@ -27,6 +27,14 @@ const LoginPage = () => {
 
     const [status, setStatus] = useState({ show: false, type: 'success', title: '', message: '' });
 
+    const normalizeRole = (role) => {
+        const value = String(role || '').toLowerCase();
+        if (['hlogix', 'hlogix_admin', 'logix', 'logixadmin', 'logix_admin'].includes(value)) {
+            return 'logix_admin';
+        }
+        return value;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validateEmail(email)) {
@@ -46,8 +54,7 @@ const LoginPage = () => {
                     title: 'Login successful',
                     message: 'Welcome back. Redirecting...'
                 });
-                const savedUser = JSON.parse(localStorage.getItem('hub_user'));
-                const role = savedUser.role;
+                const role = normalizeRole(result.user?.role);
                 setTimeout(() => {
                     if (role === 'admin') navigate('/admin');
                     else if (role === 'seller') navigate('/seller');
@@ -64,7 +71,7 @@ const LoginPage = () => {
                 });
                 setError(result.message || 'Invalid credentials.');
             }
-        } catch (err) {
+        } catch {
             setStatus({ show: true, type: 'failed', title: 'System Error', message: 'Unexpected client error occurred. Please reload and try again.' });
             setError('System error. Please try again.');
         } finally {
@@ -77,7 +84,7 @@ const LoginPage = () => {
             <div style={decorBlur1} />
             <div style={decorBlur2} />
 
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} style={loginCard}>
+            <Motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} style={loginCard}>
                 <header style={lHeader}>
                     <div style={logoCircle}><Gem size={32} color="white" /></div>
                     <h1 style={lTitle}>H-HUB</h1>
@@ -146,7 +153,7 @@ const LoginPage = () => {
                         New here? <Link to="/register" style={lJoinLink}>Create account</Link>
                     </div>
                 </div>
-            </motion.div>
+            </Motion.div>
 
             <StatusPopup
                 show={status.show}

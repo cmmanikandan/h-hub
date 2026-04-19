@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import {
     Users,
@@ -11,7 +11,8 @@ import {
     Layers,
     Activity,
     TrendingUp,
-    DollarSign,
+    Filter,
+    Sparkles,
     Zap,
     Bell,
     Search,
@@ -39,7 +40,6 @@ import {
     Download,
     Power,
     UploadCloud,
-    Filter,
     CheckCircle2,
     ShieldCheck,
     EyeOff,
@@ -50,6 +50,7 @@ import {
     User,
     Star,
     CreditCard,
+    DollarSign,
     Calculator,
     HelpCircle,
     Info,
@@ -79,7 +80,7 @@ import {
 } from 'recharts';
 import { QRCodeSVG } from 'qrcode.react';
 import Barcode from 'react-barcode';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/authContext';
 import api, { API_BASE_URL } from '../utils/api';
 import { getValidationErrors, getEmailValidation, getPhoneValidation, getPasswordStrength } from '../utils/validation';
 
@@ -88,7 +89,6 @@ import AdvancedFilters from '../components/AdvancedFilters';
 import BulkActions from '../components/BulkActions';
 import RealTimeAnalytics from '../components/RealTimeAnalytics';
 import ActivityTimeline from '../components/ActivityTimeline';
-import { exportUsersToCSV, exportSellersToCSV, exportOrdersToCSV, exportProductsToCSV } from '../utils/exportUtils';
 import AssignOrder from './AssignOrder';
 import InfoTooltip from '../components/InfoTooltip';
 import PricingCalculator from '../components/PricingCalculator';
@@ -162,7 +162,7 @@ const sidebarScrollbarStyles = `
 `;
 
 const AdminDashboard = () => {
-    const { user, logout, lang } = useAuth();
+    const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('overview');
     const [stats, setStats] = useState({
@@ -195,7 +195,6 @@ const AdminDashboard = () => {
         performanceData: []
     });
     const [searchQuery, setSearchQuery] = useState('');
-    const [userRoleFilter, setUserRoleFilter] = useState('all');
     const [ordersList, setOrdersList] = useState([]);
     const [viewingDetails, setViewingDetails] = useState(null);
     const [assigningOrder, setAssigningOrder] = useState(null);
@@ -295,12 +294,9 @@ const AdminDashboard = () => {
     });
 
     // 🆕 Phase 1 Feature State
-    const [selectedUsers, setSelectedUsers] = useState([]);
-    const [selectedSellers, setSelectedSellers] = useState([]);
-    const [selectedDelivery, setSelectedDelivery] = useState([]);
-    const [filteredUserList, setFilteredUserList] = useState([]);
-    const [filteredSellerList, setFilteredSellerList] = useState([]);
-    const [filteredDeliveryList, setFilteredDeliveryList] = useState([]);
+    const [, setFilteredUserList] = useState([]);
+    const [, setFilteredSellerList] = useState([]);
+    const [, setFilteredDeliveryList] = useState([]);
 
     const [superCoinRules, setSuperCoinRules] = useState([]);
     const [showSuperCoinModal, setShowSuperCoinModal] = useState(false);
@@ -317,8 +313,6 @@ const AdminDashboard = () => {
     // Verification System States
     const [verifyingProduct, setVerifyingProduct] = useState(null);
     const [verificationTab, setVerificationTab] = useState('info'); // info, pricing, risk
-    const [rejectReason, setRejectReason] = useState('');
-    const [verificationNote, setVerificationNote] = useState('');
 
     // 🆕 New Advanced Features States
     const [riskAssessment, setRiskAssessment] = useState({
@@ -349,13 +343,6 @@ const AdminDashboard = () => {
         open: [],
         resolved: [],
         pending: 0
-    });
-    const [systemHealth, setSystemHealth] = useState({
-        apiStatus: 'healthy',
-        uptime: 99.9,
-        responseTime: 0,
-        errorRate: 0,
-        lastCheck: new Date()
     });
     const [inventoryAlerts, setInventoryAlerts] = useState({
         lowStock: [],
@@ -416,6 +403,7 @@ const AdminDashboard = () => {
             showStatus('success', 'Delivery Partner Assigned Successfully', 'Successfull');
             setAssigningOrder(null);
         } catch (error) {
+            void error;
             showStatus('failed', 'Failed to assign delivery partner', 'Failed');
         }
     };
@@ -512,6 +500,7 @@ const AdminDashboard = () => {
             const res = await api.get('/notifications?role=admin');
             setNotifications(res.data);
         } catch (error) {
+            void error;
             console.error('Failed to fetch notifications:', error);
         }
     };
@@ -522,6 +511,7 @@ const AdminDashboard = () => {
             // Filter unverified sellers/delivery
             setApplications(res.data.filter(u => !u.isVerified && (u.role === 'seller' || u.role === 'delivery')));
         } catch (error) {
+            void error;
             console.error('Failed to fetch applications');
         }
     };
@@ -534,6 +524,7 @@ const AdminDashboard = () => {
             fetchUsers();
             fetchNotifications();
         } catch (error) {
+            void error;
             showStatus('failed', 'Verification failed', 'Failed');
         }
     };
@@ -579,6 +570,7 @@ const AdminDashboard = () => {
         if (activeTab === 'monitoring') fetchRealTimeData();
         if (activeTab === 'inventory') fetchInventoryAlerts();
         if (activeTab === 'revenue') fetchRevenueAnalytics();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTab]);
 
     const fetchDeliveryStats = async () => {
@@ -586,6 +578,7 @@ const AdminDashboard = () => {
             const res = await api.get('/admin/delivery-stats');
             setDeliveryStats(res.data);
         } catch (error) {
+            void error;
             console.error('Failed to fetch delivery stats');
         }
     };
@@ -595,6 +588,7 @@ const AdminDashboard = () => {
             const res = await api.get('/coupons');
             setCouponList(res.data || []);
         } catch (error) {
+            void error;
             console.error('Failed to fetch coupons');
             setCouponList([]);
         }
@@ -605,6 +599,7 @@ const AdminDashboard = () => {
             const res = await api.get('/admin/settings');
             setPlatformSettings(prev => ({ ...prev, ...res.data }));
         } catch (error) {
+            void error;
             console.error('Failed to fetch settings');
         }
     };
@@ -614,6 +609,7 @@ const AdminDashboard = () => {
             const res = await api.get('/admin/profits-summary');
             setProfitSummary(res.data);
         } catch (error) {
+            void error;
             console.error('Failed to fetch profit summary');
         }
     };
@@ -623,6 +619,7 @@ const AdminDashboard = () => {
             const res = await api.get('/admin/settlements');
             setSettlementList(res.data);
         } catch (error) {
+            void error;
             console.error('Failed to fetch settlements');
         }
     };
@@ -632,6 +629,7 @@ const AdminDashboard = () => {
             await api.put('/admin/settings', { settings: updates });
             setPlatformSettings(prev => ({ ...prev, ...updates }));
         } catch (error) {
+            void error;
             console.error('Failed to update settings');
         }
     };
@@ -641,6 +639,7 @@ const AdminDashboard = () => {
             const res = await api.get('/admin/profit-rules');
             setProfitRules(res.data);
         } catch (error) {
+            void error;
             console.error('Failed to fetch profit rules');
         }
     };
@@ -654,6 +653,7 @@ const AdminDashboard = () => {
             fetchProfitRules();
             setNewRule({ minSellerPrice: 0, maxSellerPrice: 0, profitPercentage: 0, minProfitAmount: 0, maxProfitCap: 0, isActive: true });
         } catch (error) {
+            void error;
             showStatus('failed', 'Failed to create profit rule', 'Failed');
         }
     };
@@ -665,6 +665,7 @@ const AdminDashboard = () => {
                 showStatus('success', 'Profit rule deleted successfully!', 'Deleted');
                 fetchProfitRules();
             } catch (error) {
+            void error;
                 showStatus('failed', 'Failed to delete rule', 'Failed');
             }
         }, 'Delete Rule?', 'delete');
@@ -675,6 +676,7 @@ const AdminDashboard = () => {
             await api.put(`/admin/profit-rules/${id}/toggle`);
             fetchProfitRules();
         } catch (error) {
+            void error;
             showStatus('failed', 'Failed to toggle status', 'Failed');
         }
     };
@@ -684,6 +686,7 @@ const AdminDashboard = () => {
             const res = await api.get('/admin/supercoin-rules');
             setSuperCoinRules(res.data);
         } catch (error) {
+            void error;
             console.error('Failed to fetch supercoin rules');
         }
     };
@@ -697,6 +700,7 @@ const AdminDashboard = () => {
             fetchSuperCoinRules();
             setNewSuperCoinRule({ minOrderAmount: 0, maxOrderAmount: 100000, rewardPercentage: 0, isActive: true });
         } catch (error) {
+            void error;
             showStatus('failed', 'Failed to create rule', 'Failed');
         }
     };
@@ -708,6 +712,7 @@ const AdminDashboard = () => {
                 showStatus('success', 'SuperCoin rule deleted successfully!', 'Deleted');
                 fetchSuperCoinRules();
             } catch (error) {
+            void error;
                 showStatus('failed', 'Failed to delete rule', 'Failed');
             }
         }, 'Delete Reward Rule?', 'delete');
@@ -718,6 +723,7 @@ const AdminDashboard = () => {
             await api.put(`/admin/supercoin-rules/${id}/toggle`);
             fetchSuperCoinRules();
         } catch (error) {
+            void error;
             showStatus('failed', 'Failed to toggle status', 'Failed');
         }
     };
@@ -729,6 +735,7 @@ const AdminDashboard = () => {
                 const res = await api.post('/admin/recalculate-all-prices');
                 showStatus('changed', `Success! Recalculated prices for ${res.data.count} products.`, 'Recalculation Successful');
             } catch (error) {
+            void error;
                 showStatus('failed', 'Recalculation failed', 'Failed');
             } finally {
                 setRecalculating(false);
@@ -742,6 +749,7 @@ const AdminDashboard = () => {
             showStatus('success', 'Broadcast message sent to all active users.', 'Broadcast Sent');
             fetchNotifications();
         } catch (error) {
+            void error;
             showStatus('failed', 'Failed to send broadcast', 'Broadcast Error');
         }
     };
@@ -753,6 +761,7 @@ const AdminDashboard = () => {
             showStatus('success', 'Payment transferred successfully!', 'Successfull');
             fetchSettlements();
         } catch (error) {
+            void error;
             showStatus('failed', error.response?.data?.error || 'Settlement failed', 'Settlement Failed');
         } finally {
             setProcessingPayout(null);
@@ -765,6 +774,7 @@ const AdminDashboard = () => {
             showStatus('success', 'COD amount claimed successfully!', 'Successfull');
             fetchSettlements();
         } catch (error) {
+            void error;
             showStatus('failed', error.response?.data?.error || 'Failed to claim COD', 'Claim Failed');
         }
     };
@@ -778,6 +788,7 @@ const AdminDashboard = () => {
             setNewCoupon({ code: '', discountType: 'percentage', discountValue: 0, minOrderAmount: 0 });
             fetchCoupons();
         } catch (error) {
+            void error;
             showStatus('failed', error.response?.data?.error || 'Failed to create coupon', 'Failed');
         }
     };
@@ -789,6 +800,7 @@ const AdminDashboard = () => {
                 showStatus('success', 'Coupon deleted successfully!', 'Deleted');
                 fetchCoupons();
             } catch (error) {
+            void error;
                 showStatus('failed', 'Failed to delete coupon', 'Failed');
             }
         }, 'Disable Coupon?', 'delete');
@@ -799,6 +811,7 @@ const AdminDashboard = () => {
             const res = await api.get('/admin/earnings');
             setProfitStats(res.data);
         } catch (error) {
+            void error;
             console.error('Failed to fetch profit stats:', error);
         }
     };
@@ -808,6 +821,7 @@ const AdminDashboard = () => {
             const res = await api.get('/admin/stats');
             setStats(res.data);
         } catch (error) {
+            void error;
             console.error('Failed to fetch stats:', error);
         } finally {
             setLoading(false);
@@ -832,6 +846,7 @@ const AdminDashboard = () => {
                 });
             }
         } catch (error) {
+            void error;
             console.warn('Risk assessment endpoint not available, using defaults');
             setRiskAssessment({
                 highRiskOrders: [],
@@ -852,7 +867,7 @@ const AdminDashboard = () => {
             } else {
                 // Fallback with seller and delivery data
                 setPerformanceAnalytics({
-                    merchants: sellerList.map((s, idx) => ({
+                    merchants: sellerList.map((s) => ({
                         id: s.id,
                         name: s.name,
                         rating: (3.5 + Math.random() * 1.5).toFixed(1),
@@ -860,7 +875,7 @@ const AdminDashboard = () => {
                         revenue: Math.floor(Math.random() * 500000),
                         trend: Math.floor(Math.random() * 100) - 50
                     })).slice(0, 10),
-                    deliveryPartners: deliveryList.map((d, idx) => ({
+                    deliveryPartners: deliveryList.map((d) => ({
                         id: d.id,
                         name: d.name,
                         rating: (3.8 + Math.random() * 1.2).toFixed(1),
@@ -873,9 +888,10 @@ const AdminDashboard = () => {
                 });
             }
         } catch (error) {
+            void error;
             console.warn('Performance analytics endpoint not available, using defaults');
             setPerformanceAnalytics({
-                merchants: sellerList.map((s, idx) => ({
+                merchants: sellerList.map((s) => ({
                     id: s.id,
                     name: s.name,
                     rating: (3.5 + Math.random() * 1.5).toFixed(1),
@@ -883,7 +899,7 @@ const AdminDashboard = () => {
                     revenue: Math.floor(Math.random() * 500000),
                     trend: Math.floor(Math.random() * 100) - 50
                 })).slice(0, 10),
-                deliveryPartners: deliveryList.map((d, idx) => ({
+                deliveryPartners: deliveryList.map((d) => ({
                     id: d.id,
                     name: d.name,
                     rating: (3.8 + Math.random() * 1.2).toFixed(1),
@@ -919,6 +935,7 @@ const AdminDashboard = () => {
                 });
             }
         } catch (error) {
+            void error;
             console.warn('Customer analytics endpoint not available');
             setCustomerAnalytics({
                 totalCustomers: userList.length,
@@ -951,6 +968,7 @@ const AdminDashboard = () => {
                 });
             }
         } catch (error) {
+            void error;
             console.warn('Support tickets endpoint not available');
             setSupportTickets({
                 allTickets: [],
@@ -975,6 +993,7 @@ const AdminDashboard = () => {
                 });
             }
         } catch (error) {
+            void error;
             setRealTimeData({
                 activeUsers: userList.filter(u => u.isActive).length,
                 onlineDelivery: deliveryList.filter(d => d.isActive).length,
@@ -999,6 +1018,7 @@ const AdminDashboard = () => {
                 });
             }
         } catch (error) {
+            void error;
             const lowStock = productList.filter(p => p.stock > 0 && p.stock < 10);
             const outOfStock = productList.filter(p => p.stock === 0);
             setInventoryAlerts({
@@ -1036,6 +1056,7 @@ const AdminDashboard = () => {
                 });
             }
         } catch (error) {
+            void error;
             const today = new Date().toISOString().split('T')[0];
             const todayOrders = ordersList.filter(o => o.createdAt.split('T')[0] === today);
             const todayRevenue = todayOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
@@ -1069,6 +1090,7 @@ const AdminDashboard = () => {
             setShowBroadcastModal(false);
             showStatus('success', 'Broadcast sent to all users successfully!', 'Broadcast Sent');
         } catch (error) {
+            void error;
             showStatus('failed', 'Failed to send broadcast', 'Error');
         }
     };
@@ -1087,13 +1109,16 @@ const AdminDashboard = () => {
             });
             setNewUser(prev => ({ ...prev, [field]: res.data.url }));
         } catch (error) {
+            void error;
             showStatus('failed', 'Upload failed: ' + error.message, 'Failed');
         } finally {
             setUploading(null);
         }
     };
 
-    const FileUploadField = ({ label, field, value, icon: Icon, color }) => (
+    const FileUploadField = ({ label, field, value, icon: Icon, color }) => {
+        const UploadIcon = Icon || UploadCloud;
+        return (
         <div style={mGroup}>
             <label style={{ ...labelStyle, color }}>{label}</label>
             <div style={uploadContainer}>
@@ -1112,7 +1137,7 @@ const AdminDashboard = () => {
                             <div style={loaderSmall} />
                         ) : (
                             <>
-                                <UploadCloud size={20} color={color || 'var(--text-muted)'} />
+                                <UploadIcon size={20} color={color || 'var(--text-muted)'} />
                                 <span>Upload {label}</span>
                             </>
                         )}
@@ -1121,6 +1146,7 @@ const AdminDashboard = () => {
             </div>
         </div>
     );
+    };
 
 
     const fetchCategories = async () => {
@@ -1128,6 +1154,7 @@ const AdminDashboard = () => {
             const res = await api.get('/categories');
             setCategories(res.data);
         } catch (error) {
+            void error;
             console.error('Failed to fetch categories:', error);
         }
     };
@@ -1137,6 +1164,7 @@ const AdminDashboard = () => {
             const res = await api.get('/admin/all-users');
             setUserList(res.data);
         } catch (error) {
+            void error;
             console.error('Failed to fetch users:', error);
         }
     };
@@ -1146,6 +1174,7 @@ const AdminDashboard = () => {
             const res = await api.get('/admin/sellers');
             setSellerList(res.data);
         } catch (error) {
+            void error;
             console.error('Failed to fetch sellers:', error);
         }
     };
@@ -1155,6 +1184,7 @@ const AdminDashboard = () => {
             const res = await api.get('/admin/delivery');
             setDeliveryList(res.data);
         } catch (error) {
+            void error;
             console.error('Failed to fetch delivery men:', error);
         }
     };
@@ -1164,6 +1194,7 @@ const AdminDashboard = () => {
             const res = await api.get('/admin/offers');
             setOfferList(res.data);
         } catch (error) {
+            void error;
             console.error('Failed to fetch offers:', error);
         }
     };
@@ -1173,6 +1204,7 @@ const AdminDashboard = () => {
             const res = await api.get('/admin/products');
             setProductList(res.data);
         } catch (error) {
+            void error;
             console.error('Failed to fetch products:', error);
         }
     };
@@ -1183,6 +1215,7 @@ const AdminDashboard = () => {
             setProductList(prev => prev.map(p => p.id === productId ? res.data.product : p));
             showStatus('success', 'Product is now LIVE in the marketplace.', 'Approved');
         } catch (error) {
+            void error;
             showStatus('failed', error.response?.data?.error || 'Approval failed', 'Failed');
         }
     };
@@ -1195,6 +1228,7 @@ const AdminDashboard = () => {
             setProductList(prev => prev.map(p => p.id === productId ? res.data.product : p));
             showStatus('info', 'Product marked for correction.', 'Changes Requested');
         } catch (error) {
+            void error;
             showStatus('failed', error.response?.data?.error || 'Update failed', 'Failed');
         }
     };
@@ -1206,6 +1240,7 @@ const AdminDashboard = () => {
                 showStatus('success', 'Product has been removed from the shop.', 'Successfull');
                 fetchProducts();
             } catch (error) {
+            void error;
                 showStatus('failed', error.response?.data?.error || 'Failed to delete product', 'Failed');
             }
         }, 'Destroy Product?', 'delete');
@@ -1216,6 +1251,7 @@ const AdminDashboard = () => {
             const res = await api.get('/admin/orders');
             setOrdersList(res.data);
         } catch (error) {
+            void error;
             console.error('Failed to fetch admin orders:', error);
         }
     };
@@ -1225,6 +1261,7 @@ const AdminDashboard = () => {
             await api.put(`/orders/${orderId}/status`, { status: newStatus, deliveryManId: riderId });
             fetchOrders();
         } catch (error) {
+            void error;
             console.error('Failed to update status:', error);
             showStatus('failed', 'Failed to update order status', 'Update Failed');
         }
@@ -1235,6 +1272,7 @@ const AdminDashboard = () => {
             const res = await api.get('/admin/reports/sales');
             setSalesReport(res.data);
         } catch (error) {
+            void error;
             console.error('Failed to fetch sales report:', error);
         }
     };
@@ -1244,6 +1282,7 @@ const AdminDashboard = () => {
             const res = await api.get('/admin/logs');
             setAuditLogs(res.data);
         } catch (error) {
+            void error;
             console.error('Failed to fetch logs:', error);
         }
     };
@@ -1258,6 +1297,7 @@ const AdminDashboard = () => {
             setNewCategory({ name: '', description: '' });
             fetchCategories();
         } catch (error) {
+            void error;
             showStatus('failed', 'Error creating category', 'Failed');
         } finally {
             setLoading(false);
@@ -1271,6 +1311,7 @@ const AdminDashboard = () => {
                 showStatus('success', 'Category deleted successfully!', 'Deleted');
                 fetchCategories();
             } catch (error) {
+            void error;
                 showStatus('failed', 'Error deleting category', 'Failed');
             }
         }, 'Delete Category?', 'delete');
@@ -1315,6 +1356,7 @@ const AdminDashboard = () => {
                 isVerified: false
             });
         } catch (error) {
+            void error;
             showStatus('failed', 'Error: ' + (error.response?.data?.error || error.message), 'Registration Failed');
         } finally {
             setLoading(false);
@@ -1348,6 +1390,7 @@ const AdminDashboard = () => {
             fetchOffers();
             fetchStats();
         } catch (error) {
+            void error;
             showStatus('failed', 'Error saving offer: ' + (error.response?.data?.error || error.message), 'Failed');
         } finally {
             setLoading(false);
@@ -1375,6 +1418,7 @@ const AdminDashboard = () => {
             await api.put(`/admin/offers/${offerId}/toggle`);
             fetchOffers();
         } catch (error) {
+            void error;
             showStatus('failed', 'Failed to toggle offer status', 'Failed');
         }
     };
@@ -1384,6 +1428,7 @@ const AdminDashboard = () => {
             await api.put(`/admin/products/${productId}/badge`, { badge });
             fetchProducts();
         } catch (error) {
+            void error;
             showStatus('failed', 'Failed to update product badge', 'Failed');
         }
     };
@@ -1396,6 +1441,7 @@ const AdminDashboard = () => {
                 fetchOffers();
                 fetchStats();
             } catch (error) {
+            void error;
                 showStatus('failed', 'Failed to delete offer', 'Failed');
             }
         }, 'Cease Campaign?', 'delete');
@@ -1407,6 +1453,7 @@ const AdminDashboard = () => {
             fetchUsers();
             fetchStats();
         } catch (error) {
+            void error;
             showStatus('failed', 'Failed to update user status', 'Failed');
         }
     };
@@ -1419,6 +1466,7 @@ const AdminDashboard = () => {
                 fetchUsers();
                 fetchStats();
             } catch (error) {
+            void error;
                 showStatus('failed', 'Failed to delete user. Please try again.', 'Failed');
             }
         }, 'Erase User Record?', 'delete');
@@ -1455,6 +1503,7 @@ const AdminDashboard = () => {
             if (activeTab === 'merchants') fetchSellers();
             if (activeTab === 'delivery') fetchDelivery();
         } catch (error) {
+            void error;
             showStatus('failed', 'Error: ' + (error.response?.data?.error || error.message), 'Failed');
         } finally {
             setLoading(false);
@@ -1473,6 +1522,7 @@ const AdminDashboard = () => {
             setNewPass('');
             setResettingUser(null);
         } catch (error) {
+            void error;
             showStatus('failed', error.response?.data?.error || 'Failed to reset password', 'Failed');
         }
     };
@@ -1480,7 +1530,7 @@ const AdminDashboard = () => {
     // 🆕 Phase 1 Feature Handlers
 
     // Advanced Filter Handlers
-    const handleUserFilter = (filters) => {
+    const _handleUserFilter = (filters) => {
         let filtered = [...userList];
 
         if (filters.search) {
@@ -1514,7 +1564,7 @@ const AdminDashboard = () => {
         setFilteredUserList(filtered);
     };
 
-    const handleSellerFilter = (filters) => {
+    const _handleSellerFilter = (filters) => {
         let filtered = [...sellerList];
 
         if (filters.search) {
@@ -1535,7 +1585,7 @@ const AdminDashboard = () => {
         setFilteredSellerList(filtered);
     };
 
-    const handleDeliveryFilter = (filters) => {
+    const _handleDeliveryFilter = (filters) => {
         let filtered = [...deliveryList];
 
         if (filters.search) {
@@ -1557,32 +1607,35 @@ const AdminDashboard = () => {
     };
 
     // Bulk Action Handlers
-    const handleBulkDelete = async (ids) => {
+    const _handleBulkDelete = async (ids) => {
         try {
             await api.post('/admin/users/bulk-delete', { userIds: ids });
             showStatus('success', `Successfully deleted ${ids.length} users`, 'Bulk Action Complete');
             fetchUsers();
         } catch (error) {
+            void error;
             showStatus('failed', 'Bulk delete failed: ' + error.message, 'Failed');
         }
     };
 
-    const handleBulkActivate = async (ids) => {
+    const _handleBulkActivate = async (ids) => {
         try {
             await api.post('/admin/users/bulk-activate', { userIds: ids });
             showStatus('success', `Successfully activated ${ids.length} users`, 'Bulk Action Complete');
             fetchUsers();
         } catch (error) {
+            void error;
             showStatus('failed', 'Bulk activate failed: ' + error.message, 'Failed');
         }
     };
 
-    const handleBulkDeactivate = async (ids) => {
+    const _handleBulkDeactivate = async (ids) => {
         try {
             await api.post('/admin/users/bulk-deactivate', { userIds: ids });
             showStatus('success', `Successfully deactivated ${ids.length} users`, 'Bulk Action Complete');
             fetchUsers();
         } catch (error) {
+            void error;
             showStatus('failed', 'Bulk deactivate failed: ' + error.message, 'Failed');
         }
     };
@@ -1595,6 +1648,7 @@ const AdminDashboard = () => {
                 showStatus('success', `Successfully deleted ${ids.length} products`, 'Bulk Delete Complete');
                 fetchProducts();
             } catch (error) {
+            void error;
                 showStatus('failed', 'Bulk delete failed: ' + error.message, 'Failed');
             }
         }, 'Delete Products?', 'delete');
@@ -1606,6 +1660,7 @@ const AdminDashboard = () => {
             showStatus('success', `Successfully approved ${ids.length} products`, 'Bulk Approve Complete');
             fetchProducts();
         } catch (error) {
+            void error;
             showStatus('failed', 'Bulk approve failed: ' + error.message, 'Failed');
         }
     };
@@ -1616,29 +1671,32 @@ const AdminDashboard = () => {
             showStatus('success', `Successfully rejected ${ids.length} products`, 'Bulk Reject Complete');
             fetchProducts();
         } catch (error) {
+            void error;
             showStatus('failed', 'Bulk reject failed: ' + error.message, 'Failed');
         }
     };
 
     // Bulk Action Handlers for Orders
-    const handleBulkDeleteOrders = async (ids) => {
+    const _handleBulkDeleteOrders = async (ids) => {
         confirmAction(`This will permanently delete ${ids.length} orders from the database.`, async () => {
             try {
                 await api.post('/admin/orders/bulk-delete', { orderIds: ids });
                 showStatus('success', `Successfully deleted ${ids.length} orders`, 'Bulk Delete Complete');
                 fetchOrders();
             } catch (error) {
+            void error;
                 showStatus('failed', 'Bulk delete failed: ' + error.message, 'Failed');
             }
         }, 'Delete Orders?', 'delete');
     };
 
-    const handleBulkCancelOrders = async (ids) => {
+    const _handleBulkCancelOrders = async (ids) => {
         try {
             await api.post('/admin/orders/bulk-cancel', { orderIds: ids });
             showStatus('success', `Successfully cancelled ${ids.length} orders`, 'Bulk Cancel Complete');
             fetchOrders();
         } catch (error) {
+            void error;
             showStatus('failed', 'Bulk cancel failed: ' + error.message, 'Failed');
         }
     };
@@ -1663,16 +1721,8 @@ const AdminDashboard = () => {
         { label: 'Orders Placed', value: stats.totalOrders, change: 'Total', icon: <ShoppingCart size={20} />, color: '#ec4899', targetTab: 'reports' },
     ];
 
-    const filteredUsers = userList.filter(u => {
-        const matchesSearch = u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            u.phone?.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesRole = userRoleFilter === 'all' || u.role === userRoleFilter;
-        return matchesSearch && matchesRole;
-    });
-
     const renderApplicationsTable = () => (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
+        <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
             <div style={adminPageHeader}>
                 <div style={headerInfo}>
                     <h3 style={contentTitle}>Verification Queue</h3>
@@ -1719,11 +1769,11 @@ const AdminDashboard = () => {
                     </tbody>
                 </table>
             </div>
-        </motion.div>
+        </Motion.div>
     );
 
     const renderUserTable = (list, title, subtitle, roleForNew) => (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={pane}>
+        <Motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={pane}>
             <div style={adminPageHeader}>
                 <div style={headerInfo}>
                     <h3 style={sectionTitle}>{title}</h3>
@@ -1828,7 +1878,7 @@ const AdminDashboard = () => {
                     </tbody>
                 </table>
             </div>
-        </motion.div>
+        </Motion.div>
     );
 
     const PieChart = ({ data }) => {
@@ -1867,10 +1917,14 @@ const AdminDashboard = () => {
                 {/* Sidebar - Responsive */}
                 <aside style={{
                     ...sidebar,
-                    position: isMobile ? 'fixed' : 'relative',
-                    transform: isMobile && !showSidebar ? 'translateX(-100%)' : 'none',
-                    zIndex: 200,
-                    width: isMobile ? '280px' : '280px',
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    bottom: 0,
+                    transform: isMobile && !showSidebar ? 'translateX(-100%)' : 'translateX(0)',
+                    zIndex: isMobile ? 200 : 120,
+                    width: '280px',
+                    height: '100vh',
                     boxShadow: isMobile && showSidebar ? '0 0 40px rgba(0,0,0,0.5)' : 'none',
                     transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                 }}>
@@ -1886,6 +1940,7 @@ const AdminDashboard = () => {
                         )}
                     </div>
 
+                    <div className="dashboard-sidebar-scroll" style={sidebarNavScroll}>
                     <div style={navSection}>
                         <span style={navLabel}>ANALYTICS & CORE</span>
                         <div style={navGroup}>
@@ -1947,6 +2002,7 @@ const AdminDashboard = () => {
                             <button onClick={() => setShowBroadcastModal(true)} style={navBtn}><Bell size={18} /> Broadcast Message</button>
                         </div>
                     </div>
+                    </div>
 
                     <div style={sidebarFooter}>
                         <div style={profileInSidebar}>
@@ -1967,7 +2023,12 @@ const AdminDashboard = () => {
                     <div onClick={() => setShowSidebar(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 199, backdropFilter: 'blur(2px)' }} />
                 )}
 
-                <main style={content}>
+                <main style={{
+                    ...content,
+                    marginLeft: isMobile ? 0 : '280px',
+                    width: isMobile ? '100%' : 'calc(100% - 280px)',
+                    overflow: 'hidden'
+                }}>
                     <header
                         style={{
                             ...topBar,
@@ -1994,7 +2055,7 @@ const AdminDashboard = () => {
                                     {notifications.some(n => !n.isRead) ? <BellDot size={18} color="#ef4444" /> : <Bell size={18} color="#ef4444" />}
                                 </button>
                                 {showNotifications && (
-                                    <div style={notifPanel}>
+                                    <div style={notificationPanel}>
                                         <div style={notifHeader}>System Alerts</div>
                                         <div style={notifList}>
                                             {notifications.length === 0 ? <div style={pNoNotif}>No new alerts.</div> : notifications.map(n => (
@@ -2050,10 +2111,10 @@ const AdminDashboard = () => {
                             </button>
                         </div>
                     </header>
-                    <div style={{ ...scrollArea, padding: isMobile ? '1rem' : '2rem 3rem' }}>
+                    <div style={{ ...scrollArea, overflowY: isMobile && showSidebar ? 'hidden' : 'auto', padding: isMobile ? '1rem' : '2rem 3rem' }}>
                         <AnimatePresence mode="wait">
                             {activeTab === 'overview' && (
-                                <motion.div key="ov" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={pane}>
+                                <Motion.div key="ov" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={pane}>
                                     <div style={adminPageHeader}>
                                         <div style={headerInfo}>
                                             <h1 style={contentTitle}>System Command Center</h1>
@@ -2069,7 +2130,7 @@ const AdminDashboard = () => {
 
                                     <div style={{ ...statsGrid, gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)' }}>
                                         {displayStats.map((s, i) => (
-                                            <motion.div
+                                            <Motion.div
                                                 key={i}
                                                 style={saasStatCard}
                                                 onClick={() => setActiveTab(s.targetTab)}
@@ -2077,12 +2138,12 @@ const AdminDashboard = () => {
                                                 whileTap={{ scale: 0.98 }}
                                             >
                                                 <div style={statHeader}>
-                                                    <motion.div
+                                                    <Motion.div
                                                         style={{ ...statIconBox, color: s.color }}
                                                         whileHover={{ rotate: 15, scale: 1.1 }}
                                                     >
                                                         {s.icon}
-                                                    </motion.div>
+                                                    </Motion.div>
                                                     <span style={statTrend}>+12.5%</span>
                                                 </div>
                                                 <div style={statContent}>
@@ -2090,11 +2151,11 @@ const AdminDashboard = () => {
                                                     <h3 style={statValue}>{s.value}</h3>
                                                 </div>
                                                 <div style={{ position: 'absolute', bottom: 0, right: 0, width: '100px', height: '100px', background: `radial-gradient(circle at bottom right, ${s.color}10, transparent)`, borderRadius: '0 0 28px 0' }} />
-                                            </motion.div>
+                                            </Motion.div>
                                         ))}
                                     </div>
                                     <div style={doubleGrid}>
-                                        <motion.div
+                                        <Motion.div
                                             style={chartCard}
                                             initial={{ opacity: 0, x: -20 }}
                                             animate={{ opacity: 1, x: 0 }}
@@ -2126,8 +2187,8 @@ const AdminDashboard = () => {
                                                     </AreaChart>
                                                 </ResponsiveContainer>
                                             </div>
-                                        </motion.div>
-                                        <motion.div
+                                        </Motion.div>
+                                        <Motion.div
                                             style={{ ...chartCard, display: 'flex', flexDirection: 'column', alignItems: 'center' }}
                                             initial={{ opacity: 0, x: 20 }}
                                             animate={{ opacity: 1, x: 0 }}
@@ -2146,7 +2207,7 @@ const AdminDashboard = () => {
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '10px', height: '10px', background: '#10b981', borderRadius: '2px' }} /> Seller</div>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '10px', height: '10px', background: '#f59e0b', borderRadius: '2px' }} /> Rider</div>
                                             </div>
-                                        </motion.div>
+                                        </Motion.div>
                                     </div>
                                     <div style={{ ...chartCard, marginTop: '2rem' }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -2230,7 +2291,7 @@ const AdminDashboard = () => {
                                     <div style={{ ...chartCard, marginTop: '2rem' }}>
                                         <h3 style={cardTitle}>⚡ Platform Quick Actions</h3>
                                         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: '1.25rem' }}>
-                                            <motion.button
+                                            <Motion.button
                                                 style={{
                                                     display: 'flex',
                                                     flexDirection: 'column',
@@ -2258,9 +2319,39 @@ const AdminDashboard = () => {
                                                     <Store size={24} />
                                                 </div>
                                                 <div style={{ fontWeight: 800, fontSize: '1rem', letterSpacing: '-0.3px' }}>Register Seller</div>
-                                            </motion.button>
+                                            </Motion.button>
 
-                                            <motion.button
+                                            <Motion.button
+                                                style={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'flex-start',
+                                                    gap: '1rem',
+                                                    padding: '1.5rem',
+                                                    background: 'linear-gradient(135deg, #0f172a 0%, #2563eb 100%)',
+                                                    border: 'none',
+                                                    borderRadius: '20px',
+                                                    color: '#ffffff',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.3s ease',
+                                                    width: '100%',
+                                                    textAlign: 'left',
+                                                    boxShadow: '0 10px 25px rgba(15, 23, 42, 0.3)',
+                                                    position: 'relative',
+                                                    overflow: 'hidden'
+                                                }}
+                                                whileHover={{ y: -5, boxShadow: '0 15px 35px rgba(37, 99, 235, 0.35)' }}
+                                                whileTap={{ scale: 0.98 }}
+                                                onClick={() => navigate('/innovations')}
+                                            >
+                                                <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '100px', height: '100px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
+                                                <div style={{ background: 'rgba(255,255,255,0.18)', padding: '0.75rem', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <Sparkles size={24} />
+                                                </div>
+                                                <div style={{ fontWeight: 800, fontSize: '1rem', letterSpacing: '-0.3px' }}>Open Innovation Hub</div>
+                                            </Motion.button>
+
+                                            <Motion.button
                                                 style={{
                                                     display: 'flex',
                                                     flexDirection: 'column',
@@ -2288,9 +2379,9 @@ const AdminDashboard = () => {
                                                     <Truck size={24} />
                                                 </div>
                                                 <div style={{ fontWeight: 800, fontSize: '1rem', letterSpacing: '-0.3px' }}>Register Rider</div>
-                                            </motion.button>
+                                            </Motion.button>
 
-                                            <motion.button
+                                            <Motion.button
                                                 style={{
                                                     display: 'flex',
                                                     flexDirection: 'column',
@@ -2318,9 +2409,9 @@ const AdminDashboard = () => {
                                                     <Tag size={24} />
                                                 </div>
                                                 <div style={{ fontWeight: 800, fontSize: '1rem', letterSpacing: '-0.3px' }}>New Campaign</div>
-                                            </motion.button>
+                                            </Motion.button>
 
-                                            <motion.button
+                                            <Motion.button
                                                 style={{
                                                     display: 'flex',
                                                     flexDirection: 'column',
@@ -2348,10 +2439,10 @@ const AdminDashboard = () => {
                                                     <UploadCloud size={24} color="#4facfe" />
                                                 </div>
                                                 <div style={{ fontWeight: 800, fontSize: '1rem', letterSpacing: '-0.3px' }}>Backup Data</div>
-                                            </motion.button>
+                                            </Motion.button>
                                         </div>
                                         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: '1.25rem', marginTop: '1.25rem' }}>
-                                            <motion.button
+                                            <Motion.button
                                                 style={{
                                                     display: 'flex',
                                                     flexDirection: 'column',
@@ -2379,9 +2470,9 @@ const AdminDashboard = () => {
                                                     <Package size={24} />
                                                 </div>
                                                 <div style={{ fontWeight: 800, fontSize: '1rem', letterSpacing: '-0.3px' }}>View Products</div>
-                                            </motion.button>
+                                            </Motion.button>
 
-                                            <motion.button
+                                            <Motion.button
                                                 style={{
                                                     display: 'flex',
                                                     flexDirection: 'column',
@@ -2409,9 +2500,9 @@ const AdminDashboard = () => {
                                                     <TrendingUp size={24} />
                                                 </div>
                                                 <div style={{ fontWeight: 800, fontSize: '1rem', letterSpacing: '-0.3px' }}>Profit Analysis</div>
-                                            </motion.button>
+                                            </Motion.button>
 
-                                            <motion.button
+                                            <Motion.button
                                                 style={{
                                                     display: 'flex',
                                                     flexDirection: 'column',
@@ -2439,9 +2530,9 @@ const AdminDashboard = () => {
                                                     <CreditCard size={24} />
                                                 </div>
                                                 <div style={{ fontWeight: 800, fontSize: '1rem', letterSpacing: '-0.3px' }}>Settlements</div>
-                                            </motion.button>
+                                            </Motion.button>
 
-                                            <motion.button
+                                            <Motion.button
                                                 style={{
                                                     display: 'flex',
                                                     flexDirection: 'column',
@@ -2469,7 +2560,7 @@ const AdminDashboard = () => {
                                                     <FileText size={24} />
                                                 </div>
                                                 <div style={{ fontWeight: 800, fontSize: '1rem', letterSpacing: '-0.3px' }}>Reports</div>
-                                            </motion.button>
+                                            </Motion.button>
                                         </div>
                                     </div>
 
@@ -2573,13 +2664,13 @@ const AdminDashboard = () => {
                                             </div>
                                         </div>
                                     </div>
-                                </motion.div>
+                                </Motion.div>
                             )}
 
                             {activeTab === 'dispatch' && (
-                                <motion.div key="dispatch" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ height: '100%' }}>
+                                <Motion.div key="dispatch" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ height: '100%' }}>
                                     <AssignOrder />
-                                </motion.div>
+                                </Motion.div>
                             )}
 
                             {activeTab === 'applications' && renderApplicationsTable()}
@@ -2591,7 +2682,7 @@ const AdminDashboard = () => {
                             {activeTab === 'delivery' && renderUserTable(deliveryList, "Delivery Men", "Coordination of delivery riders and fulfillment personnel.", "delivery")}
 
                             {activeTab === 'orders' && (
-                                <motion.div key="orders" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
+                                <Motion.div key="orders" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
                                     <div style={adminPageHeader}>
                                         <div style={headerInfo}>
                                             <h3 style={sectionTitle}>Central Order Dispatch</h3>
@@ -2701,11 +2792,11 @@ const AdminDashboard = () => {
                                             </tbody>
                                         </table>
                                     </div>
-                                </motion.div>
+                                </Motion.div>
                             )}
 
                             {activeTab === 'reports' && (
-                                <motion.div key="reports" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
+                                <Motion.div key="reports" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
                                     <div style={adminPageHeader}>
                                         <div style={headerInfo}>
                                             <h3 style={sectionTitle}>Revenue & Commissions</h3>
@@ -2741,11 +2832,11 @@ const AdminDashboard = () => {
                                             </tbody>
                                         </table>
                                     </div>
-                                </motion.div>
+                                </Motion.div>
                             )}
 
                             {activeTab === 'offers' && (
-                                <motion.div key="offers" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
+                                <Motion.div key="offers" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
                                     <div style={adminPageHeader}>
                                         <div style={headerInfo}>
                                             <h3 style={sectionTitle}>Promotional Ecosystem</h3>
@@ -2784,11 +2875,11 @@ const AdminDashboard = () => {
                                             </div>
                                         ))}
                                     </div>
-                                </motion.div>
+                                </Motion.div>
                             )}
 
                             {activeTab === 'coupons' && (
-                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
+                                <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
                                     <div style={adminPageHeader}>
                                         <h2 style={paneTitle}>Coupon Management</h2>
                                         <button onClick={() => setShowCouponModal(true)} style={createBtn}><Plus size={18} /> New Coupon</button>
@@ -2823,7 +2914,7 @@ const AdminDashboard = () => {
 
                                     {showCouponModal && (
                                         <div style={modalOverlay}>
-                                            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} style={modal}>
+                                            <Motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} style={modal}>
                                                 <h2 style={modalTitle}>Create New Coupon</h2>
                                                 <form onSubmit={handleCreateCoupon}>
                                                     <div style={modalGrid}>
@@ -2852,14 +2943,14 @@ const AdminDashboard = () => {
                                                         <button type="submit" style={submitBtn}>Create Coupon</button>
                                                     </div>
                                                 </form>
-                                            </motion.div>
+                                            </Motion.div>
                                         </div>
                                     )}
-                                </motion.div>
+                                </Motion.div>
                             )}
                             {
                                 activeTab === 'categories_admin' && (
-                                    <motion.div key="cats" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
+                                    <Motion.div key="cats" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
                                         <div style={adminPageHeader}>
                                             <div style={headerInfo}>
                                                 <h3 style={sectionTitle}>Marketplace Taxonomy</h3>
@@ -2896,12 +2987,12 @@ const AdminDashboard = () => {
                                                 </tbody>
                                             </table>
                                         </div>
-                                    </motion.div>
+                                    </Motion.div>
                                 )
                             }
 
                             {activeTab === 'settings_admin' && (
-                                <motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
+                                <Motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
                                     <div style={adminPageHeader}>
                                         <div style={headerInfo}>
                                             <h3 style={sectionTitle}>Pricing & Global Settings</h3>
@@ -3245,7 +3336,7 @@ const AdminDashboard = () => {
                                     {/* SuperCoin Modal */}
                                     {showSuperCoinModal && (
                                         <div style={modalOverlay}>
-                                            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} style={modal}>
+                                            <Motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} style={modal}>
                                                 <h2 style={modalTitle}>New SuperCoin Rule</h2>
                                                 <form onSubmit={handleCreateSuperCoinRule}>
                                                     <div style={modalGrid}>
@@ -3267,14 +3358,14 @@ const AdminDashboard = () => {
                                                         <button type="submit" style={{ ...submitBtn, background: '#f59e0b' }}>Create Rule</button>
                                                     </div>
                                                 </form>
-                                            </motion.div>
+                                            </Motion.div>
                                         </div>
                                     )}
 
                                     {/* Profit Rule Modal */}
                                     {showRuleModal && (
                                         <div style={modalOverlay}>
-                                            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} style={modal}>
+                                            <Motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} style={modal}>
                                                 <h2 style={modalTitle}>New Profit Rule</h2>
                                                 <form onSubmit={handleCreateProfitRule}>
                                                     <div style={modalGrid}>
@@ -3304,21 +3395,21 @@ const AdminDashboard = () => {
                                                         <button type="submit" style={submitBtn}>Create Rule</button>
                                                     </div>
                                                 </form>
-                                            </motion.div>
+                                            </Motion.div>
                                         </div>
                                     )}
 
-                                </motion.div>
+                                </Motion.div>
                             )}
 
                             {activeTab === 'calculator' && (
-                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
+                                <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
                                     <PricingCalculator />
-                                </motion.div>
+                                </Motion.div>
                             )}
 
                             {activeTab === 'profits_admin' && (
-                                <motion.div key="profits" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
+                                <Motion.div key="profits" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
                                     <div style={adminPageHeader}>
                                         <div style={headerInfo}>
                                             <h3 style={sectionTitle}>💰 Admin Profit Analysis & Ledger</h3>
@@ -3360,36 +3451,36 @@ const AdminDashboard = () => {
 
                                     {profitSummary && (
                                         <div style={{ ...statsGrid, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(6, 1fr)', gap: '1rem', marginBottom: '2.5rem' }}>
-                                            <motion.div style={saasStatCard} whileHover={{ y: -3, boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
+                                            <Motion.div style={saasStatCard} whileHover={{ y: -3, boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
                                                 <span style={statLabel}>Platform Profit</span>
                                                 <h3 style={{ ...statValue, color: '#10b981' }}>₹{profitSummary.totalAdminProfit?.toFixed(2)}</h3>
                                                 <div style={{ fontSize: '0.7rem', color: '#10b981', marginTop: '0.5rem', fontWeight: 700 }}>↑ 12.5% vs last month</div>
-                                            </motion.div>
-                                            <motion.div style={saasStatCard} whileHover={{ y: -3, boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
+                                            </Motion.div>
+                                            <Motion.div style={saasStatCard} whileHover={{ y: -3, boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
                                                 <span style={statLabel}>GST Collected</span>
                                                 <h3 style={statValue}>₹{profitSummary.totalGst?.toFixed(2)}</h3>
                                                 <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.5rem', fontWeight: 700 }}>18% on all orders</div>
-                                            </motion.div>
-                                            <motion.div style={saasStatCard} whileHover={{ y: -3, boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
+                                            </Motion.div>
+                                            <Motion.div style={saasStatCard} whileHover={{ y: -3, boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
                                                 <span style={statLabel}>Fuel Recovery</span>
                                                 <h3 style={{ ...statValue, color: '#3b82f6' }}>₹{profitSummary.totalFuel?.toFixed(2)}</h3>
                                                 <div style={{ fontSize: '0.7rem', color: '#3b82f6', marginTop: '0.5rem', fontWeight: 700 }}>100% recovered</div>
-                                            </motion.div>
-                                            <motion.div style={saasStatCard} whileHover={{ y: -3, boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
+                                            </Motion.div>
+                                            <Motion.div style={saasStatCard} whileHover={{ y: -3, boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
                                                 <span style={statLabel}>Ads Margin</span>
                                                 <h3 style={statValue}>₹{profitSummary.totalAds?.toFixed(2)}</h3>
                                                 <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.5rem', fontWeight: 700 }}>Platform ads revenue</div>
-                                            </motion.div>
-                                            <motion.div style={saasStatCard} whileHover={{ y: -3, boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
+                                            </Motion.div>
+                                            <Motion.div style={saasStatCard} whileHover={{ y: -3, boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
                                                 <span style={statLabel}>Packing Cost</span>
                                                 <h3 style={{ ...statValue, color: '#ef4444' }}>-₹{profitSummary.totalPacking}</h3>
                                                 <div style={{ fontSize: '0.7rem', color: '#ef4444', marginTop: '0.5rem', fontWeight: 700 }}>Operational expense</div>
-                                            </motion.div>
-                                            <motion.div style={saasStatCard} whileHover={{ y: -3, boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
+                                            </Motion.div>
+                                            <Motion.div style={saasStatCard} whileHover={{ y: -3, boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
                                                 <span style={statLabel}>Shipping Cost</span>
                                                 <h3 style={{ ...statValue, color: '#ef4444' }}>-₹{profitSummary.totalShipping}</h3>
                                                 <div style={{ fontSize: '0.7rem', color: '#ef4444', marginTop: '0.5rem', fontWeight: 700 }}>Logistics expense</div>
-                                            </motion.div>
+                                            </Motion.div>
                                         </div>
                                     )}
 
@@ -3493,7 +3584,6 @@ const AdminDashboard = () => {
                                                     <Filter size={14} /> All Orders
                                                 </button>
                                                 <button style={{ ...miniAction, background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }} onClick={() => {
-                                                    const today = new Date().toDateString();
                                                     // Filter logic here
                                                 }}>
                                                     <Calendar size={14} /> Today
@@ -3560,11 +3650,11 @@ const AdminDashboard = () => {
                                             </tbody>
                                         </table>
                                     </div>
-                                </motion.div>
+                                </Motion.div>
                             )}
 
                             {activeTab === 'settlements_admin' && (
-                                <motion.div key="settle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
+                                <Motion.div key="settle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
                                     <div style={adminPageHeader}>
                                         <div style={headerInfo}>
                                             <h3 style={sectionTitle}>Vendor & Logistics Settlements</h3>
@@ -3656,12 +3746,12 @@ const AdminDashboard = () => {
                                             </tbody>
                                         </table>
                                     </div>
-                                </motion.div>
+                                </Motion.div>
                             )}
 
                             {
                                 activeTab === 'reports_calendar' && (
-                                    <motion.div key="calendar" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
+                                    <Motion.div key="calendar" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
                                         <div style={adminPageHeader}>
                                             <div style={headerInfo}>
                                                 <h3 style={sectionTitle}>Unified Platform Calendar</h3>
@@ -3718,7 +3808,7 @@ const AdminDashboard = () => {
                                                                 acc[date].orders += 1;
                                                                 acc[date].revenue += order.totalAmount;
                                                                 return acc;
-                                                            }, {})).map(([k, v]) => v).sort((a, b) => a.date.localeCompare(b.date))}>
+                                                            }, {})).map(([, v]) => v).sort((a, b) => a.date.localeCompare(b.date))}>
                                                                 <defs>
                                                                     <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
                                                                         <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8} />
@@ -3763,13 +3853,13 @@ const AdminDashboard = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                    </motion.div>
+                                    </Motion.div>
                                 )
                             }
 
                             {
                                 activeTab === 'verification' && (
-                                    <motion.div key="verification" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
+                                    <Motion.div key="verification" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
                                         <div style={adminPageHeader}>
                                             <div style={headerInfo}>
                                                 <h3 style={sectionTitle}>Product Verification Center</h3>
@@ -3910,12 +4000,12 @@ const AdminDashboard = () => {
                                                 </tbody>
                                             </table>
                                         </div>
-                                    </motion.div>
+                                    </Motion.div>
                                 )
                             }
                             {
                                 activeTab === 'logs' && (
-                                    <motion.div key="logs" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
+                                    <Motion.div key="logs" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
                                         <div style={adminPageHeader}>
                                             <div style={headerInfo}>
                                                 <h3 style={sectionTitle}>System Security Logs</h3>
@@ -3967,13 +4057,13 @@ const AdminDashboard = () => {
                                                 </tbody>
                                             </table>
                                         </div>
-                                    </motion.div>
+                                    </Motion.div>
                                 )
                             }
 
                             {
                                 activeTab === 'express' && (
-                                    <motion.div key="express" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
+                                    <Motion.div key="express" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
                                         <div style={adminPageHeader}>
                                             <div style={headerInfo}>
                                                 <h3 style={sectionTitle}>Product Highlights</h3>
@@ -4054,14 +4144,14 @@ const AdminDashboard = () => {
                                                 </tbody>
                                             </table>
                                         </div>
-                                    </motion.div>
+                                    </Motion.div>
                                 )
                             }
 
                             {/* 🆕 Risk Assessment Dashboard */}
                             {
                                 activeTab === 'risk_assessment' && (
-                                    <motion.div key="risk_assessment" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
+                                    <Motion.div key="risk_assessment" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
                                         <div style={adminPageHeader}>
                                             <div style={headerInfo}>
                                                 <h3 style={sectionTitle}>Risk Assessment Dashboard</h3>
@@ -4184,14 +4274,14 @@ const AdminDashboard = () => {
                                                 </div>
                                             )}
                                         </div>
-                                    </motion.div>
+                                    </Motion.div>
                                 )
                             }
 
                             {/* 🆕 Performance Analytics */}
                             {
                                 activeTab === 'performance' && (
-                                    <motion.div key="performance" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
+                                    <Motion.div key="performance" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
                                         <div style={adminPageHeader}>
                                             <div style={headerInfo}>
                                                 <h3 style={sectionTitle}>Performance Analytics</h3>
@@ -4271,14 +4361,14 @@ const AdminDashboard = () => {
                                                 </table>
                                             </div>
                                         </div>
-                                    </motion.div>
+                                    </Motion.div>
                                 )
                             }
 
                             {/* 🆕 Customer Analytics */}
                             {
                                 activeTab === 'customers' && (
-                                    <motion.div key="customers" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
+                                    <Motion.div key="customers" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
                                         <div style={adminPageHeader}>
                                             <div style={headerInfo}>
                                                 <h3 style={sectionTitle}>Customer Insights</h3>
@@ -4364,14 +4454,14 @@ const AdminDashboard = () => {
                                                 ))}
                                             </div>
                                         </div>
-                                    </motion.div>
+                                    </Motion.div>
                                 )
                             }
 
                             {/* 🆕 Support Tickets */}
                             {
                                 activeTab === 'support' && (
-                                    <motion.div key="support" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
+                                    <Motion.div key="support" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
                                         <div style={adminPageHeader}>
                                             <div style={headerInfo}>
                                                 <h3 style={sectionTitle}>Support Tickets</h3>
@@ -4476,14 +4566,14 @@ const AdminDashboard = () => {
                                                 </table>
                                             )}
                                         </div>
-                                    </motion.div>
+                                    </Motion.div>
                                 )
                             }
 
                             {/* 🆕 Real-Time Monitoring */}
                             {
                                 activeTab === 'monitoring' && (
-                                    <motion.div key="monitoring" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
+                                    <Motion.div key="monitoring" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
                                         <div style={adminPageHeader}>
                                             <div style={headerInfo}>
                                                 <h3 style={sectionTitle}>Real-Time Monitoring</h3>
@@ -4580,14 +4670,14 @@ const AdminDashboard = () => {
                                                 ))}
                                             </div>
                                         </div>
-                                    </motion.div>
+                                    </Motion.div>
                                 )
                             }
 
                             {/* 🆕 Revenue Analytics */}
                             {
                                 activeTab === 'revenue' && (
-                                    <motion.div key="revenue" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
+                                    <Motion.div key="revenue" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
                                         <div style={adminPageHeader}>
                                             <div style={headerInfo}>
                                                 <h3 style={sectionTitle}>Revenue Analytics</h3>
@@ -4710,14 +4800,14 @@ const AdminDashboard = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                    </motion.div>
+                                    </Motion.div>
                                 )
                             }
 
                             {/* 🆕 Inventory Alerts */}
                             {
                                 activeTab === 'inventory' && (
-                                    <motion.div key="inventory" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
+                                    <Motion.div key="inventory" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={pane}>
                                         <div style={adminPageHeader}>
                                             <div style={headerInfo}>
                                                 <h3 style={sectionTitle}>Inventory Management</h3>
@@ -4863,7 +4953,7 @@ const AdminDashboard = () => {
                                                 <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '0.5rem' }}>No stock alerts or warnings detected.</p>
                                             </div>
                                         )}
-                                    </motion.div>
+                                    </Motion.div>
                                 )
                             }
                         </AnimatePresence >
@@ -4875,7 +4965,7 @@ const AdminDashboard = () => {
             < AnimatePresence >
                 {showRegisterModal && (
                     <div style={modalOverlay}>
-                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ ...modal, width: '600px' }}>
+                        <Motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ ...modal, width: '600px' }}>
                             <div style={mHeader}>
                                 <h2>Add Platform {newUser.role.toUpperCase()}</h2>
                                 <button onClick={() => setShowRegisterModal(false)} style={closeBtn}><X /></button>
@@ -5049,7 +5139,7 @@ const AdminDashboard = () => {
 
                                 <button type="submit" style={mSubmit} disabled={loading}>{loading ? 'Accessing Secure API...' : `Activate ${newUser.role} Profile`}</button>
                             </form>
-                        </motion.div>
+                        </Motion.div>
                     </div>
                 )}
             </AnimatePresence >
@@ -5058,7 +5148,7 @@ const AdminDashboard = () => {
             < AnimatePresence >
                 {showEditModal && editingUser && (
                     <div style={modalOverlay}>
-                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ ...modal, width: '600px' }}>
+                        <Motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ ...modal, width: '600px' }}>
                             <div style={mHeader}>
                                 <h2>Edit {editingUser.role.toUpperCase()} Details</h2>
                                 <button onClick={() => { setShowEditModal(false); setEditingUser(null); }} style={closeBtn}><X /></button>
@@ -5120,7 +5210,7 @@ const AdminDashboard = () => {
 
                                 <button type="submit" style={mSubmit} disabled={loading}>{loading ? 'Updating...' : `Update ${editingUser.role} Profile`}</button>
                             </form>
-                        </motion.div>
+                        </Motion.div>
                     </div>
                 )}
             </AnimatePresence >
@@ -5129,7 +5219,7 @@ const AdminDashboard = () => {
             < AnimatePresence >
                 {showResetModal && resettingUser && (
                     <div style={modalOverlay}>
-                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ ...modal, width: '450px' }}>
+                        <Motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ ...modal, width: '450px' }}>
                             <div style={mHeader}>
                                 <h2>Reset Password</h2>
                                 <button onClick={() => { setShowResetModal(false); setResettingUser(null); setNewPass(''); }} style={closeBtn}><X /></button>
@@ -5188,7 +5278,7 @@ const AdminDashboard = () => {
                                     Force Update Password
                                 </button>
                             </div>
-                        </motion.div>
+                        </Motion.div>
                     </div>
                 )}
             </AnimatePresence >
@@ -5197,7 +5287,7 @@ const AdminDashboard = () => {
             < AnimatePresence >
                 {showCategoryModal && (
                     <div style={modalOverlay}>
-                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={modal}>
+                        <Motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={modal}>
                             <div style={mHeader}>
                                 <h2>Define New Category</h2>
                                 <button onClick={() => setShowCategoryModal(false)} style={closeBtn}><X /></button>
@@ -5207,7 +5297,7 @@ const AdminDashboard = () => {
                                 <div style={mGroup}><label>Brief Description</label><textarea value={newCategory.description} onChange={e => setNewCategory({ ...newCategory, description: e.target.value })} style={{ ...mInput, height: '80px', paddingTop: '0.5rem' }} placeholder="What fits in this category?" /></div>
                                 <button type="submit" style={mSubmit} disabled={loading}>{loading ? 'Writing to Master DB...' : 'Create Global Category'}</button>
                             </form>
-                        </motion.div>
+                        </Motion.div>
                     </div>
                 )}
             </AnimatePresence >
@@ -5216,7 +5306,7 @@ const AdminDashboard = () => {
             < AnimatePresence >
                 {showRuleModal && (
                     <div style={modalOverlay}>
-                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={modal}>
+                        <Motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={modal}>
                             <div style={mHeader}>
                                 <h2>Define Profit Logic Rule</h2>
                                 <button onClick={() => setShowRuleModal(false)} style={closeBtn}><X /></button>
@@ -5248,7 +5338,7 @@ const AdminDashboard = () => {
                                 </div>
                                 <button type="submit" style={mSubmit}>Activate New Margin Rule</button>
                             </form>
-                        </motion.div>
+                        </Motion.div>
                     </div>
                 )}
             </AnimatePresence >
@@ -5257,7 +5347,7 @@ const AdminDashboard = () => {
             < AnimatePresence >
                 {showOfferModal && (
                     <div style={modalOverlay}>
-                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={modal}>
+                        <Motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={modal}>
                             <div style={mHeader}>
                                 <h2>{editingOffer ? 'Modify Campaign' : 'Advanced Campaign Setup'}</h2>
                                 <button onClick={() => { setShowOfferModal(false); setEditingOffer(null); }} style={closeBtn}><X /></button>
@@ -5289,7 +5379,7 @@ const AdminDashboard = () => {
                                     {loading ? 'Processing...' : (editingOffer ? 'Update Campaign' : 'Activate Live Offer')}
                                 </button>
                             </form>
-                        </motion.div>
+                        </Motion.div>
                     </div>
                 )}
             </AnimatePresence >
@@ -5297,8 +5387,8 @@ const AdminDashboard = () => {
             {/* Order Details Advanced Modal */}
             < AnimatePresence >
                 {viewingDetails && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={modalOverlay} onClick={() => setViewingDetails(null)}>
-                        <motion.div
+                    <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={modalOverlay} onClick={() => setViewingDetails(null)}>
+                        <Motion.div
                             initial={{ scale: 0.95, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             style={{ ...modal, width: '900px', padding: 0, overflow: 'hidden' }}
@@ -5555,16 +5645,16 @@ const AdminDashboard = () => {
                                     </div>
                                 )}
                             </div>
-                        </motion.div>
-                    </motion.div>
+                        </Motion.div>
+                    </Motion.div>
                 )}
             </AnimatePresence >
 
             {/* Logistics Assignment Modal */}
             < AnimatePresence >
                 {assigningOrder && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={modalOverlay} onClick={() => setAssigningOrder(null)}>
-                        <motion.div
+                    <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={modalOverlay} onClick={() => setAssigningOrder(null)}>
+                        <Motion.div
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             style={{ ...modal, width: '500px' }}
@@ -5634,16 +5724,16 @@ const AdminDashboard = () => {
                             >
                                 Confirm Logistics Assignment
                             </button>
-                        </motion.div>
-                    </motion.div>
+                        </Motion.div>
+                    </Motion.div>
                 )}
             </AnimatePresence >
 
             {/* Verification Modal */}
             <AnimatePresence>
                 {verifyingProduct && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={modalOverlay} onClick={() => setVerifyingProduct(null)}>
-                        <motion.div
+                    <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={modalOverlay} onClick={() => setVerifyingProduct(null)}>
+                        <Motion.div
                             initial={{ scale: 0.95, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             style={{ ...modal, width: '800px', display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 }}
@@ -5835,8 +5925,8 @@ const AdminDashboard = () => {
                                     <CheckCircle2 size={16} /> Approve & Publish
                                 </button>
                             </div>
-                        </motion.div>
-                    </motion.div>
+                        </Motion.div>
+                    </Motion.div>
                 )}
 
             </AnimatePresence>
@@ -5844,8 +5934,8 @@ const AdminDashboard = () => {
             {/* Broadcast Message Modal */}
             <AnimatePresence>
                 {showBroadcastModal && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={modalOverlay} onClick={() => setShowBroadcastModal(false)}>
-                        <motion.div
+                    <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={modalOverlay} onClick={() => setShowBroadcastModal(false)}>
+                        <Motion.div
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             style={{ ...modal, width: '550px' }}
@@ -5912,8 +6002,8 @@ const AdminDashboard = () => {
                                     <Bell size={16} /> Send Broadcast
                                 </button>
                             </div>
-                        </motion.div>
-                    </motion.div>
+                        </Motion.div>
+                    </Motion.div>
                 )}
             </AnimatePresence>
 
@@ -5934,7 +6024,8 @@ const container = { minHeight: '100dvh', display: 'flex', flexDirection: 'column
 const layout = { flex: 1, display: 'flex', overflow: 'hidden' };
 
 // Sidebar
-const sidebar = { width: '280px', background: '#0f172a', display: 'flex', flexDirection: 'column', padding: '1.5rem', flexShrink: 0, color: '#fff', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', borderRight: '1px solid rgba(255,255,255,0.05)' };
+const sidebar = { width: '280px', background: '#0f172a', display: 'flex', flexDirection: 'column', padding: '1.5rem', flexShrink: 0, color: '#fff', overflow: 'hidden', borderRight: '1px solid rgba(255,255,255,0.05)' };
+const sidebarNavScroll = { flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin', scrollbarColor: 'rgba(148,163,184,0.65) rgba(15,23,42,0.4)', paddingRight: '0.25rem' };
 const logoSection = { display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem 0', marginBottom: '3rem' };
 const logoIcon = { background: 'var(--primary)', padding: '0.6rem', borderRadius: '14px', boxShadow: '0 8px 16px rgba(37, 99, 235, 0.3)' };
 const logoText = { fontWeight: 900, fontSize: '1.4rem', letterSpacing: '-0.5px', color: 'white' };
@@ -5955,18 +6046,18 @@ const logoutBtnSidebar = { ...navBtn, color: '#ef4444', background: 'rgba(239, 6
 const backToHubBtn = { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', background: 'none', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', color: '#94a3b8' };
 
 // Main Content
-const content = { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#f8fafc' };
+const content = { flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden', background: '#f8fafc' };
 const topBar = { position: 'sticky', top: 0, height: '80px', background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(226, 232, 240, 0.8)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', padding: '0 3rem', flexShrink: 0, zIndex: 100 };
 const topBarLeft = { display: 'flex', alignItems: 'center', gap: '1rem', minWidth: 0, flex: '1 1 320px' };
 const topBarRight = { display: 'flex', alignItems: 'center', gap: '0.85rem', minWidth: 0, flexWrap: 'wrap', justifyContent: 'flex-end' };
 const searchWrapper = { display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#f1f5f9', padding: '0.5rem 1rem', borderRadius: '12px', width: 'min(350px, 100%)', minWidth: 0 };
 const sInput = { background: 'none', border: 'none', outline: 'none', fontSize: '0.9rem', color: '#1e293b', width: '100%' };
 const topNavBtn = { display: 'flex', alignItems: 'center', gap: '0.6rem', background: '#f8fafc', border: '1px solid #e2e8f0', cursor: 'pointer', color: 'var(--primary)', fontWeight: 800, fontSize: '0.85rem', padding: '0.6rem 1rem', borderRadius: '12px', transition: 'all 0.2s' };
-const vDivider = { width: '1px', height: '24px', background: '#e2e8f0' };
-const topProfile = { display: 'flex', alignItems: 'center', gap: '0.75rem' };
-const adminBadge = { background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '0.35rem 0.85rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.5px', border: '1px solid rgba(59, 130, 246, 0.2)' };
+const _vDivider = { width: '1px', height: '24px', background: '#e2e8f0' };
+const _topProfile = { display: 'flex', alignItems: 'center', gap: '0.75rem' };
+const _adminBadge = { background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '0.35rem 0.85rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.5px', border: '1px solid rgba(59, 130, 246, 0.2)' };
 
-const scrollArea = { flex: 1, overflowY: 'auto', padding: '2rem 3rem' };
+const scrollArea = { flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '2rem 3rem' };
 const pane = { display: 'flex', flexDirection: 'column' };
 const adminPageHeader = { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '2.5rem' };
 const headerInfo = { display: 'flex', flexDirection: 'column', gap: '0.25rem' };
@@ -6119,3 +6210,5 @@ const submitBtn = {
 };
 
 export default AdminDashboard;
+
+

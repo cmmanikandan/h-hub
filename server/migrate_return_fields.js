@@ -1,50 +1,53 @@
-import sqlite3 from 'sqlite3';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dbPath = path.join(__dirname, 'hub_db.sqlite');
-
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('❌ Error opening database:', err);
-        process.exit(1);
-    }
-    console.log('✅ Connected to database');
-});
+import { sequelize } from './db.js';
 
 // Add return-related columns to orders table
-const alterTableSQL = [
-    `ALTER TABLE Orders ADD COLUMN returnStatus TEXT DEFAULT NULL;`,
-    `ALTER TABLE Orders ADD COLUMN returnReason TEXT DEFAULT NULL;`,
-    `ALTER TABLE Orders ADD COLUMN returnCondition TEXT DEFAULT NULL;`,
-    `ALTER TABLE Orders ADD COLUMN returnComment TEXT DEFAULT NULL;`,
-    `ALTER TABLE Orders ADD COLUMN returnRequestedAt DATETIME DEFAULT NULL;`,
-    `ALTER TABLE Orders ADD COLUMN refundAmount FLOAT DEFAULT 0;`,
-    `ALTER TABLE Orders ADD COLUMN refundStatus TEXT DEFAULT 'Pending';`,
-    `ALTER TABLE Orders ADD COLUMN refundProcessedAt DATETIME DEFAULT NULL;`,
+const alterTableColumns = [
+    { name: 'returnStatus', type: 'TEXT', defaultValue: null },
+    { name: 'returnReason', type: 'TEXT', defaultValue: null },
+    { name: 'returnCondition', type: 'TEXT', defaultValue: null },
+    { name: 'returnComment', type: 'TEXT', defaultValue: null },
+    { name: 'returnRequestedAt', type: 'DATE', defaultValue: null },
+    { name: 'refundAmount', type: 'FLOAT', defaultValue: 0 },
+    { name: 'refundStatus', type: 'TEXT', defaultValue: 'Pending' },
+    { name: 'refundProcessedAt', type: 'DATE', defaultValue: null },
 ];
 
-let completed = 0;
+async function addColumns() {
+    await sequelize.authenticate();
+    console.log('✅ Connected to database');
 
-alterTableSQL.forEach((sql, index) => {
-    db.run(sql, (err) => {
-        if (err) {
-            // Column might already exist, that's okay
-            if (err.message.includes('duplicate column name')) {
+    const queryInterface = sequelize.getQueryInterface();
+    const existingColumns = await queryInterface.describeTable('Orders');
+
+    for (let index = 0; index < alterTableColumns.length; index++) {
+        const column = alterTableColumns[index];
+
+        if (existingColumns[column.name]) {
+            console.log(`⏭️  Column ${index + 1}: Already exists`);
+            continue;
+        }
+
+        try {
+            await queryInterface.addColumn('Orders', column.name, {
+                type: sequelize.Sequelize[column.type],
+                defaultValue: column.defaultValue
+            });
+            console.log(`✅ SQL ${index + 1}: Column added successfully`);
+        } catch (error) {
+            if (error.message.includes('duplicate column name') || error.message.includes('already exists')) {
                 console.log(`⏭️  Column ${index + 1}: Already exists`);
             } else {
-                console.error(`❌ Error executing SQL ${index + 1}:`, err.message);
+                console.error(`❌ Error executing SQL ${index + 1}:`, error.message);
             }
-        } else {
-            console.log(`✅ SQL ${index + 1}: Column added successfully`);
         }
+    }
 
-        completed++;
-        if (completed === alterTableSQL.length) {
-            console.log('\n✅ Migration completed!');
-            db.close();
-            process.exit(0);
-        }
-    });
+    console.log('\n✅ Migration completed!');
+    await sequelize.close();
+}
+
+addColumns().catch(async (error) => {
+    console.error('❌ Migration failed:', error.message);
+    await sequelize.close();
+    process.exit(1);
 });

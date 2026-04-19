@@ -12,12 +12,13 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import featuresRouter from './features-api.js';
+import innovationRouter from './innovation-features-api.js';
 import { v2 as cloudinary } from 'cloudinary';
-
-dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 // Cloudinary Configuration
 cloudinary.config({
@@ -89,26 +90,47 @@ const upload = multer({
     limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
 
+const getLocalUploadUrl = (req, file) => `${req.protocol}://${req.get('host')}/uploads/${encodeURIComponent(file.filename)}`;
+
 // File Upload Route (Now uses Cloudinary)
 app.post('/api/upload', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
-        // Upload to Cloudinary
-        const result = await cloudinary.uploader.upload(req.file.path, {
-            folder: 'h-hub'
-        });
+        const hasCloudinaryConfig = Boolean(
+            process.env.CLOUDINARY_CLOUD_NAME &&
+            process.env.CLOUDINARY_API_KEY &&
+            process.env.CLOUDINARY_API_SECRET
+        );
 
-        // Delete local temporary file
-        if (fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
+        if (hasCloudinaryConfig) {
+            try {
+                const result = await cloudinary.uploader.upload(req.file.path, {
+                    folder: 'h-hub'
+                });
+
+                if (fs.existsSync(req.file.path)) {
+                    fs.unlinkSync(req.file.path);
+                }
+
+                console.log('✅ File uploaded to Cloudinary:', result.secure_url);
+                return res.json({ success: true, url: result.secure_url, provider: 'cloudinary' });
+            } catch (uploadError) {
+                console.warn('⚠️ Cloudinary upload failed, falling back to local storage:', uploadError.message);
+            }
         }
 
-        console.log('✅ File uploaded to Cloudinary:', result.secure_url);
-        res.json({ success: true, url: result.secure_url });
+        const localUrl = getLocalUploadUrl(req, req.file);
+        console.log('✅ File saved locally:', localUrl);
+        res.json({ success: true, url: localUrl, provider: 'local' });
     } catch (error) {
         console.error('❌ Cloudinary Upload Error:', error);
-        res.status(500).json({ error: 'Failed to upload to Cloudinary. Check your credentials.' });
+        if (req.file && fs.existsSync(req.file.path)) {
+            const localUrl = getLocalUploadUrl(req, req.file);
+            console.log('✅ File saved locally after error:', localUrl);
+            return res.json({ success: true, url: localUrl, provider: 'local' });
+        }
+        res.status(500).json({ error: 'Failed to upload file. Please try again.' });
     }
 });
 
@@ -6257,7 +6279,11 @@ app.get('/api/health', async (req, res) => {
         ]);
         res.json({
             status: 'healthy',
-            database: process.env.DB_DIALECT === 'mysql' ? 'MySQL' : 'SQLite',
+            database: process.env.DB_DIALECT === 'mysql'
+                ? 'MySQL'
+                : process.env.DB_DIALECT === 'postgres'
+                    ? 'PostgreSQL'
+                    : 'SQLite',
             tables: { users: userCount, products: productCount, orders: orderCount },
             timestamp: new Date().toISOString()
         });
@@ -6282,6 +6308,7 @@ initDB().then(async () => {
 
     // ✅ Register Advanced Features Routes
     app.use(featuresRouter);
+    app.use(innovationRouter);
 
     app.listen(PORT, () => {
         console.log('\n' + '='.repeat(50));

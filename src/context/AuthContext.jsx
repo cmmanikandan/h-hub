@@ -1,12 +1,14 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api, { API_BASE_URL, normalizeApiError } from '../utils/api';
 import { auth, googleProvider } from '../utils/firebase';
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from './authContext';
 
-const AuthContext = createContext();
 const API_URL = API_BASE_URL;
 
 export const AuthProvider = ({ children }) => {
+    const navigate = useNavigate();
     const [user, setUser] = useState(() => {
         const saved = localStorage.getItem('hub_user');
         return saved ? JSON.parse(saved) : null;
@@ -57,12 +59,12 @@ export const AuthProvider = ({ children }) => {
         orders: []
     });
 
-    const fetchProfile = async () => {
+    const fetchProfile = useCallback(async () => {
         if (!user) return;
         setLoadingProfile(true);
         try {
-            const userRes = await api.get(`/user/profile-details/${user.id}`).catch((err) => {
-                console.error('❌ Profile Fetch Failed:', err);
+            const userRes = await api.get(`/user/profile-details/${user.id}`).catch(() => {
+                console.error('❌ Profile Fetch Failed');
                 return { data: user };
             });
 
@@ -71,7 +73,7 @@ export const AuthProvider = ({ children }) => {
             try {
                 const ordersRes = await api.get(`/user/orders/${user.id}`);
                 ordersData = ordersRes.data;
-            } catch (err) {
+            } catch {
                 console.warn('Orders endpoint not available, using empty orders');
                 ordersData = [];
             }
@@ -102,7 +104,7 @@ export const AuthProvider = ({ children }) => {
         } finally {
             setLoadingProfile(false);
         }
-    };
+    }, [user]);
 
     const toggleWishlist = async (productId) => {
         if (!user) return { success: false, message: 'Please login first' };
@@ -128,7 +130,7 @@ export const AuthProvider = ({ children }) => {
         if (user) {
             fetchProfile();
         }
-    }, [user]);
+    }, [user, fetchProfile]);
 
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme);
@@ -155,8 +157,8 @@ export const AuthProvider = ({ children }) => {
                     if (token) localStorage.setItem('token', token);
 
                     console.log('✅ Firebase Auth Sync Successful');
-                } catch (err) {
-                    console.error('❌ Firebase Sync Failed:', err);
+                } catch (error) {
+                    console.error('❌ Firebase Sync Failed:', error);
                 }
             }
         });
@@ -185,7 +187,7 @@ export const AuthProvider = ({ children }) => {
             if (token) {
                 localStorage.setItem('token', token);
             }
-            return { success: true };
+            return { success: true, user: userData };
         } catch (error) {
             console.error('❌ Login Failed:', error.response?.data);
             const normalized = normalizeApiError(error, 'Server connection failed');
@@ -214,7 +216,7 @@ export const AuthProvider = ({ children }) => {
             transactions: [],
             orders: []
         });
-        window.location.href = '/';
+        navigate('/login', { replace: true });
     };
 
     const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
@@ -415,5 +417,3 @@ export const AuthProvider = ({ children }) => {
         </AuthContext.Provider>
     );
 };
-
-export const useAuth = () => useContext(AuthContext);

@@ -10,7 +10,7 @@ import {
     Zap,
     Package
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/authContext';
 import api from '../utils/api';
 import OnlinePaymentQR from '../components/OnlinePaymentQR';
 import StatusPopup from '../components/StatusPopup';

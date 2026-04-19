@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/authContext';
 import {
     User, Edit3, LogOut, X, Save, Lock, Eye, EyeOff,
     Gift, Wallet, ShoppingBag, Shield, Bell, ChevronRight,

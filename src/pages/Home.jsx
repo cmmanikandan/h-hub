@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 import {
     ArrowRight,
     ShoppingBag,
@@ -10,10 +10,12 @@ import {
     Wallet,
     Gift,
     Star,
+    Sparkles,
     TrendingUp,
     Clock,
     User,
     Truck,
+    Users,
     MapPin,
     Activity,
     BarChart3,
@@ -21,7 +23,7 @@ import {
     Search
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/authContext';
 import { products } from '../data/products';
 import api from '../utils/api';
 
@@ -39,14 +41,13 @@ const Home = () => {
             if (user.role === 'admin') {
                 api.get(`/wallet/admin/balance?userId=${user.id}`)
                     .then(res => setAdminWalletBalance(res.data.balance || 0))
-                    .catch(err => console.warn('Admin wallet fetch failed'));
+                    .catch(() => console.warn('Admin wallet fetch failed'));
             }
             api.get(`/user/coupons/${user.id}`)
                 .then(res => setCoupons(res.data || []))
                 .catch(() => setCoupons([]));
         }
 
-        setLoadingProducts(true);
         api.get('/products')
             .then(res => {
                 setSellerProducts(res.data || []);
@@ -56,7 +57,7 @@ const Home = () => {
                 setSellerProducts([]);
                 setLoadingProducts(false);
             });
-    }, [user]);
+    }, [user, fetchProfile]);
 
     if (user) {
         const totalOrders = profile.orders?.length || 0;
@@ -131,6 +132,33 @@ const Home = () => {
                             <ActionLink to="/user/notifications" label="Notifications" />
                             <ActionLink to="/user/supercoin" label="SuperCoins" />
                             <ActionLink to="/user/orders" label="Track Delivery" />
+                            <ActionLink to="/innovations?feature=group-buy" label="Start Group Buy" />
+                            <ActionLink to="/innovations?feature=reverse-loyalty" label="Earn Reverse Loyalty" />
+                        </div>
+
+                        <div style={{ ...sectionHeader, marginTop: '3rem' }}>
+                            <h2 style={sectionTitle}>Innovation Workflows</h2>
+                            <Link to="/innovations" style={textLink}>Open Innovation Hub <ArrowUpRight size={16} /></Link>
+                        </div>
+                        <div style={innovationGrid} className="grid-responsive">
+                            <InnovationLinkCard
+                                to="/innovations?feature=group-buy"
+                                icon={<Users size={18} color="#2563eb" />}
+                                title="Hyperlocal Group Buy"
+                                desc="Create or join a pincode room and reduce prices as members join."
+                            />
+                            <InnovationLinkCard
+                                to="/innovations?feature=verification-payment"
+                                icon={<ShieldCheck size={18} color="#7c3aed" />}
+                                title="Pay After Verification"
+                                desc="Place protected payment holds and release after delivery proof checks."
+                            />
+                            <InnovationLinkCard
+                                to="/innovations?feature=family-wallet"
+                                icon={<Wallet size={18} color="#dc2626" />}
+                                title="Family Wallet"
+                                desc="Set household budgets, shared balances, and spending controls."
+                            />
                         </div>
                     </section>
 
@@ -162,6 +190,12 @@ const Home = () => {
                             <p style={{ fontSize: '0.85rem', opacity: 0.9, marginBottom: '1rem' }}>Open your store and reach millions of customers instantly.</p>
                             <Link to="/seller/apply" style={sideActionBtn}>Get Started</Link>
                         </div>
+
+                        <div style={{ ...sideCard, marginTop: '1.5rem' }}>
+                            <h3 style={sideTitle}><Sparkles size={16} style={{ marginRight: '0.35rem', verticalAlign: 'text-bottom' }} /> Innovation Studio</h3>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Run real workflows for return risk, resell, loyalty, and more.</p>
+                            <Link to="/innovations" style={allOrdersBtn}>Launch Workflows</Link>
+                        </div>
                     </aside>
                 </div>
             </div>
@@ -171,7 +205,7 @@ const Home = () => {
     return (
         <div style={guestWrapper}>
             <section style={heroSection} className="flex-responsive animate-float-up">
-                <motion.div
+                <Motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     style={heroContent}
@@ -183,7 +217,7 @@ const Home = () => {
                         <Link to="/shop" style={primeBtn}>Explore <ArrowRight size={18} /></Link>
                         <Link to="/register" style={ghostBtn}>Join Hub</Link>
                     </div>
-                </motion.div>
+                </Motion.div>
                 <div style={heroImageArea} className="mobile-hide">
                     <img src="https://images.unsplash.com/photo-1491933382434-500287f9b54b?auto=format&fit=crop&q=80&w=1000" alt="Hero" style={hImage} />
                 </div>
@@ -262,6 +296,16 @@ const ActionLink = ({ to, label }) => (
     <Link to={to} style={aBtn} className="card-interactive">{label}</Link>
 );
 
+const InnovationLinkCard = ({ to, icon, title, desc }) => (
+    <Link to={to} style={innovationCard} className="card-interactive">
+        <div style={innovationIcon}>{icon}</div>
+        <div>
+            <div style={innovationTitle}>{title}</div>
+            <div style={innovationDesc}>{desc}</div>
+        </div>
+    </Link>
+);
+
 // Styles
 const loggedInWrapper = { maxWidth: '1440px', margin: '0 auto', padding: '3rem 2rem 4rem' };
 const welcomeHeader = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' };
@@ -295,6 +339,11 @@ const pPrice = { fontSize: '1.25rem', fontWeight: 900, color: 'var(--primary)' }
 
 const quickActions = { display: 'flex', flexWrap: 'wrap', gap: '1rem' };
 const aBtn = { background: 'linear-gradient(180deg, #ffffff, #f3fbfd)', border: '1px solid rgba(8, 145, 178, 0.18)', padding: '0.8rem 1.3rem', borderRadius: '12px', fontSize: '0.9rem', fontWeight: 700, color: '#0f4f59' };
+const innovationGrid = { display: 'grid', gap: '1rem' };
+const innovationCard = { background: '#ffffff', border: '1px solid rgba(8, 145, 178, 0.18)', borderRadius: '16px', padding: '1rem', display: 'flex', gap: '0.9rem', alignItems: 'flex-start' };
+const innovationIcon = { width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(236, 254, 255, 0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 };
+const innovationTitle = { fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.2rem' };
+const innovationDesc = { fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.4 };
 
 const sidebarCol = { display: 'flex', flexDirection: 'column', gap: '1.5rem' };
 const sideCard = { padding: '1.5rem', borderRadius: '18px', border: '1px solid rgba(8, 145, 178, 0.16)', background: 'linear-gradient(180deg, #ffffff, #f7fdff)', boxShadow: 'var(--shadow-sm)' };

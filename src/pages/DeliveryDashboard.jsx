@@ -29,12 +29,13 @@ import {
     BellDot,
     Calendar, // Added Calendar icon
     Menu,
-    X
+    X,
+    Sparkles
 } from 'lucide-react';
 import SmartCalendar from '../components/SmartCalendar';
 import OnlinePaymentQR from '../components/OnlinePaymentQR';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/authContext';
 import api from '../utils/api';
 import StatusPopup from '../components/StatusPopup';
 
@@ -407,10 +408,14 @@ const DeliveryDashboard = () => {
             {/* Sidebar - Responsive */}
             <aside style={{
                 ...sidebar,
-                position: isMobile ? 'fixed' : 'relative',
-                transform: isMobile && !showSidebar ? 'translateX(-100%)' : 'none',
-                zIndex: 200,
-                width: isMobile ? '280px' : '280px',
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                bottom: 0,
+                transform: isMobile && !showSidebar ? 'translateX(-100%)' : 'translateX(0)',
+                zIndex: isMobile ? 200 : 120,
+                width: '280px',
+                height: '100vh',
                 boxShadow: isMobile && showSidebar ? '0 0 40px rgba(0,0,0,0.5)' : 'none',
                 transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
             }}>
@@ -424,6 +429,7 @@ const DeliveryDashboard = () => {
                     )}
                 </div>
 
+                <div className="dashboard-sidebar-scroll" style={sidebarNavScroll}>
                 <div style={navSection}>
                     <span style={navLabel}>DISPATCH CONTROL</span>
                     <div style={navGroup}>
@@ -440,6 +446,7 @@ const DeliveryDashboard = () => {
                         <button onClick={() => setActiveTab('earnings')} style={activeTab === 'earnings' ? activeNav : navBtn}><Wallet size={18} /> Payouts</button>
                         <button onClick={() => setActiveTab('feedback')} style={activeTab === 'feedback' ? activeNav : navBtn}><Star size={18} /> Feedback</button>
                     </div>
+                </div>
                 </div>
 
                 <div style={sidebarFooter}>
@@ -462,7 +469,12 @@ const DeliveryDashboard = () => {
                 <div onClick={() => setShowSidebar(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 199, backdropFilter: 'blur(2px)' }} />
             )}
 
-            <main style={content}>
+            <main style={{
+                ...content,
+                marginLeft: isMobile ? 0 : '280px',
+                width: isMobile ? '100%' : 'calc(100% - 280px)',
+                overflow: 'hidden'
+            }}>
                 <header style={{ ...topBar, padding: isMobile ? '0 1rem' : '0 3rem' }}>
                     <div style={topBarLeft}>
                         {isMobile && (
@@ -509,7 +521,7 @@ const DeliveryDashboard = () => {
                     </div>
                 </header>
 
-                <div style={scrollArea}>
+                <div style={{ ...scrollArea, overflowY: isMobile && showSidebar ? 'hidden' : 'auto' }}>
                     <AnimatePresence mode="wait">
                         {activeTab === 'overview' && (
                             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={pane}>
@@ -613,6 +625,7 @@ const DeliveryDashboard = () => {
                                             <button style={actionBtn} onClick={() => setActiveTab('assignments')}><Truck size={18} /> View Active Routes</button>
                                             <button style={actionBtn} onClick={() => setActiveTab('roster')}><Calendar size={18} /> Check Full Schedule</button>
                                             <button style={actionBtn} onClick={() => setActiveTab('earnings')}><Wallet size={18} /> Transaction History</button>
+                                            <button style={actionBtn} onClick={() => navigate('/innovations')}><Sparkles size={18} /> Open Innovation Hub</button>
                                         </div>
                                     </div>
                                 </div>
@@ -1885,7 +1898,8 @@ const DeliveryDashboard = () => {
 
 // Styles (Matching Admin Dashboard)
 const dashboardContainer = { display: 'flex', minHeight: '100dvh', width: '100%', background: '#f1f5f9', overflow: 'hidden' };
-const sidebar = { width: '280px', background: 'linear-gradient(180deg, #064e3b 0%, #022c22 100%)', display: 'flex', flexDirection: 'column', padding: '2rem 1.5rem', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' };
+const sidebar = { width: '280px', background: 'linear-gradient(180deg, #064e3b 0%, #022c22 100%)', display: 'flex', flexDirection: 'column', padding: '2rem 1.5rem', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' };
+const sidebarNavScroll = { flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin', scrollbarColor: 'rgba(167,243,208,0.75) rgba(6,78,59,0.35)', paddingRight: '0.25rem' };
 const logoWrapper = { display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '3rem', paddingLeft: '0.5rem' };
 const logoIcon = { width: '42px', height: '42px', background: 'linear-gradient(135deg, #10b981, #059669)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3)' };
 const logoText = { color: '#fff', fontSize: '1.25rem', fontWeight: 900, letterSpacing: '-0.025em' };
@@ -1902,7 +1916,7 @@ const profName = { fontSize: '0.85rem', fontWeight: 800 };
 const profRole = { fontSize: '0.7rem', fontWeight: 600 };
 const logoutBtnSidebar = { ...navBtn, color: '#ef4444', background: 'rgba(239, 68, 68, 0.05)' };
 const backToHubBtn = { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', background: 'none', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', color: '#94a3b8' };
-const content = { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#f8fafc' };
+const content = { flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden', background: '#f8fafc' };
 const topBar = { height: '80px', background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(226, 232, 240, 0.8)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 3rem', flexShrink: 0 };
 const topBarLeft = { display: 'flex', alignItems: 'center', gap: '1rem' };
 const topBarRight = { display: 'flex', alignItems: 'center', gap: '1.5rem' };
@@ -1912,7 +1926,7 @@ const shiftBtn = { background: '#1e293b', color: '#fff', border: 'none', padding
 const topNavBtn = { display: 'flex', alignItems: 'center', gap: '0.6rem', background: '#f8fafc', border: '1px solid #e2e8f0', cursor: 'pointer', color: '#10b981', fontWeight: 800, fontSize: '0.8rem', padding: '0.5rem 1rem', borderRadius: '10px' };
 const vDivider = { width: '1px', height: '24px', background: '#e2e8f0' };
 const deliveryBadge = { background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', padding: '0.35rem 0.85rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.5px', border: '1px solid rgba(34, 197, 94, 0.2)' };
-const scrollArea = { flex: 1, overflowY: 'auto', padding: '2rem 3rem' };
+const scrollArea = { flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '2rem 3rem' };
 const pane = { display: 'flex', flexDirection: 'column' };
 const adminPageHeader = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' };
 const headerInfo = { display: 'flex', flexDirection: 'column', gap: '0.25rem' };

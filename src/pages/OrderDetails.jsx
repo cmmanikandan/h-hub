@@ -19,7 +19,7 @@ import {
     X
 } from 'lucide-react';
 import api from '../utils/api';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/authContext';
 import Toast from '../components/Toast';
 import StatusPopup from '../components/StatusPopup';
 

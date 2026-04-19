@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { Wallet, Plus, Lock, Shield, Eye, EyeOff } from 'lucide-react';
+import { useAuth } from '../context/authContext';
+import { Wallet, Plus, Lock, Shield, Eye, EyeOff, Sparkles, Package } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import GiftCards from '../components/GiftCards';
 import api from '../utils/api';
 
 const MyWallet = () => {
-    const { profile } = useAuth();
+    const { profile, fetchProfile } = useAuth();
     const [showPinModal, setShowPinModal] = useState(false);
     const [pinData, setPinData] = useState({ currentPin: '', newPin: '', confirmPin: '' });
     const [showPins, setShowPins] = useState({ current: false, new: false, confirm: false });
@@ -66,11 +67,11 @@ const MyWallet = () => {
 
             await api.post('/wallet/pin/set', payload);
             setPinSuccess(hasPin ? 'Payment PIN changed successfully!' : 'Payment PIN set successfully!');
-            setTimeout(() => {
+            setTimeout(async () => {
                 setShowPinModal(false);
                 setPinData({ currentPin: '', newPin: '', confirmPin: '' });
                 setPinSuccess('');
-                window.location.reload(); // Refresh to update profile
+                fetchProfile?.();
             }, 2000);
         } catch (error) {
             setPinError(error.response?.data?.error || 'Failed to set PIN');
@@ -125,11 +126,11 @@ const MyWallet = () => {
             });
 
             setSendSuccess(response.data.message || 'Money sent successfully! 🎉');
-            setTimeout(() => {
+            setTimeout(async () => {
                 setShowSendModal(false);
                 setSendData({ recipient: '', amount: '', pin: '', note: '' });
                 setSendSuccess('');
-                window.location.reload(); // Refresh to update balance
+                fetchProfile?.();
             }, 2500);
         } catch (error) {
             setSendError(error.response?.data?.error || 'Failed to send money. Please try again.');
@@ -165,6 +166,36 @@ const MyWallet = () => {
                                 <Lock size={18} /> Send Money
                             </button>
                         </div>
+                    </div>
+                </section>
+
+                <section style={card}>
+                    <div style={innovationHead}>
+                        <h2 style={cardTitle}><Sparkles size={18} /> Smart Wallet Innovations</h2>
+                        <Link to="/innovations" style={innovationHubLink}>Open Hub</Link>
+                    </div>
+                    <div style={innovationGrid}>
+                        <Link to="/innovations?feature=family-wallet" style={innovationCard}>
+                            <Wallet size={16} color="#dc2626" />
+                            <div>
+                                <strong>Family Wallet</strong>
+                                <p style={innovationDesc}>Create shared limits and household spending controls.</p>
+                            </div>
+                        </Link>
+                        <Link to="/innovations?feature=insurance" style={innovationCard}>
+                            <Package size={16} color="#4f46e5" />
+                            <div>
+                                <strong>Packaging Insurance</strong>
+                                <p style={innovationDesc}>Submit and track damage-proof packaging claims.</p>
+                            </div>
+                        </Link>
+                        <Link to="/innovations?feature=group-buy" style={innovationCard}>
+                            <Sparkles size={16} color="#2563eb" />
+                            <div>
+                                <strong>Group Buy</strong>
+                                <p style={innovationDesc}>Join neighbors to unlock lower dynamic prices.</p>
+                            </div>
+                        </Link>
                     </div>
                 </section>
 
@@ -469,6 +500,11 @@ const txnName = { fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)' }
 const txnDate = { fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' };
 const txnAmount = { fontSize: '1.25rem', fontWeight: 900 };
 const emptyMessage = { textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '1rem' };
+const innovationHead = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.9rem' };
+const innovationHubLink = { fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 700 };
+const innovationGrid = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem' };
+const innovationCard = { display: 'flex', gap: '0.7rem', alignItems: 'flex-start', border: '1px solid var(--glass-border)', borderRadius: '12px', padding: '0.75rem', color: 'inherit', textDecoration: 'none', background: '#fff' };
+const innovationDesc = { margin: '0.2rem 0 0', fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.35 };
 
 // PIN Modal Styles
 const securityCard = { background: 'var(--glass)', padding: '1.5rem', borderRadius: '20px', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', gap: '1rem' };

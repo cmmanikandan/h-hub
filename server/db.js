@@ -13,27 +13,54 @@ const SQLITE_DB_PATH = path.join(__dirname, 'hub_db.sqlite');
 // 1️⃣ DATABASE CONNECTION SETUP
 // ============================================
 
-const isMySQL = process.env.DB_DIALECT === 'mysql';
+const dbDialect = (process.env.DB_DIALECT || 'sqlite').toLowerCase();
+const isMySQL = dbDialect === 'mysql';
+const isPostgres = dbDialect === 'postgres';
+const isSQLite = !isMySQL && !isPostgres;
 
 // Initialize Sequelize with proper error handling
-export const sequelize = isMySQL
-    ? new Sequelize(
-        process.env.DB_NAME || 'hub_db',
-        process.env.DB_USER || 'root',
-        process.env.DB_PASS || 'CMMANI02',
-        {
-            host: process.env.DB_HOST || 'localhost',
-            dialect: 'mysql',
+const createSequelize = () => {
+    if (isMySQL) {
+        return new Sequelize(
+            process.env.DB_NAME || 'hub_db',
+            process.env.DB_USER || 'root',
+            process.env.DB_PASS || 'CMMANI02',
+            {
+                host: process.env.DB_HOST || 'localhost',
+                dialect: 'mysql',
+                logging: false,
+                pool: {
+                    max: 5,
+                    min: 0,
+                    acquire: 30000,
+                    idle: 10000
+                }
+            }
+        );
+    }
+
+    if (isPostgres) {
+        const postgresUrl = process.env.SUPABASE_DB_URL || process.env.DATABASE_URL || '';
+        if (!postgresUrl) {
+            throw new Error('DB_DIALECT=postgres requires SUPABASE_DB_URL or DATABASE_URL');
+        }
+
+        return new Sequelize(postgresUrl, {
+            dialect: 'postgres',
             logging: false,
+            dialectOptions: {
+                ssl: process.env.DB_SSL === 'false' ? false : { require: true, rejectUnauthorized: false }
+            },
             pool: {
-                max: 5,
+                max: 10,
                 min: 0,
                 acquire: 30000,
                 idle: 10000
             }
-        }
-    )
-    : new Sequelize({
+        });
+    }
+
+    return new Sequelize({
         dialect: 'sqlite',
         storage: SQLITE_DB_PATH,
         logging: false,
@@ -51,6 +78,9 @@ export const sequelize = isMySQL
             timeout: 30000
         }
     });
+};
+
+export const sequelize = createSequelize();
 
 // ============================================
 // RETRY LOGIC FOR DATABASE OPERATIONS
@@ -1086,10 +1116,10 @@ export const initDB = async () => {
     try {
         // Test database connection
         await sequelize.authenticate();
-        console.log(`✅ Database Connection Successful (${isMySQL ? 'MySQL' : 'SQLite'})`);
+        console.log(`✅ Database Connection Successful (${isMySQL ? 'MySQL' : isPostgres ? 'PostgreSQL' : 'SQLite'})`);
 
         // Enable WAL mode for SQLite to improve concurrency
-        if (!isMySQL) {
+        if (isSQLite) {
             await sequelize.query('PRAGMA journal_mode = WAL;');
             await sequelize.query('PRAGMA busy_timeout = 30000;');
             await sequelize.query('PRAGMA synchronous = NORMAL;');
@@ -1104,7 +1134,7 @@ export const initDB = async () => {
         console.log('✅ Basic sync complete (tables created)');
 
         // Recover from partial schema drift when alter sync fails on legacy SQLite backups.
-        if (!isMySQL) {
+        if (isSQLite) {
             try {
                 const [orderColumns] = await sequelize.query("PRAGMA table_info('Orders');");
                 const hasSuperCoinsRedeemed = Array.isArray(orderColumns)
@@ -1263,6 +1293,8 @@ export const CODTransactions = sequelize.define('CODTransactions', {
     verifiedByHub: DataTypes.DATE,
     verifiedBy: DataTypes.UUID,
     status: { type: DataTypes.ENUM('Pending', 'Submitted', 'Verified', 'Disputed', 'Resolved'), defaultValue: 'Pending' }
+}, {
+    timestamps: false
 });
 
 export const Wallet = sequelize.define('Wallet', {

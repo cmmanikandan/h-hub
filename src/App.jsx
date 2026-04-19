@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider } from './context/authContext';
+import { useAuth } from './context/authContext';
 import Navbar from './components/Navbar';
 import LoginPage from './pages/LoginPage';
 import Home from './pages/Home';
@@ -43,11 +44,35 @@ import MyCoupons from './pages/MyCoupons';
 import MyGiftCards from './pages/MyGiftCards';
 import MySupercoin from './pages/MySupercoin';
 import AssignOrder from './pages/AssignOrder';
+import InnovationHub from './pages/InnovationHub';
+
+const normalizeRole = (role) => {
+  const value = String(role || '').toLowerCase();
+  if (['hlogix', 'hlogix_admin', 'logix', 'logixadmin', 'logix_admin'].includes(value)) {
+    return 'logix_admin';
+  }
+  return value;
+};
 
 const ProtectedRoute = ({ children, role }) => {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" />;
-  if (role && user.role !== role) return <Navigate to="/" />;
+  if (role && normalizeRole(user.role) !== normalizeRole(role)) return <Navigate to="/" />;
+  return children;
+};
+
+const defaultPathByRole = (role) => {
+  const normalized = normalizeRole(role);
+  if (normalized === 'admin') return '/admin';
+  if (normalized === 'seller') return '/seller';
+  if (normalized === 'delivery') return '/delivery';
+  if (normalized === 'logix_admin') return '/logix';
+  return '/';
+};
+
+const GuestOnlyRoute = ({ children }) => {
+  const { user } = useAuth();
+  if (user) return <Navigate to={defaultPathByRole(user.role)} replace />;
   return children;
 };
 
@@ -72,15 +97,15 @@ const MainLayout = ({ children }) => {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
+    <Router>
+      <AuthProvider>
         <GuestPrompt />
         <MainLayout>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/login" element={<GuestOnlyRoute><LoginPage /></GuestOnlyRoute>} />
+            <Route path="/register" element={<GuestOnlyRoute><RegisterPage /></GuestOnlyRoute>} />
+            <Route path="/forgot-password" element={<GuestOnlyRoute><ForgotPasswordPage /></GuestOnlyRoute>} />
             <Route path="/shop" element={<ShopPage />} />
             <Route path="/product/:id" element={<ProductDetails />} />
             <Route path="/cart" element={<CartPage />} />
@@ -119,11 +144,13 @@ function App() {
             <Route path="/delivery/verify" element={<ProtectedRoute role="delivery"><DeliveryVerificationPage /></ProtectedRoute>} />
             <Route path="/delivery/pro-dashboard" element={<ProtectedRoute role="delivery"><RiderProDashboard /></ProtectedRoute>} />
 
+            <Route path="/innovations" element={<ProtectedRoute><InnovationHub /></ProtectedRoute>} />
+
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </MainLayout>
-      </Router>
-    </AuthProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 

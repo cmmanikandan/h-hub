@@ -27,7 +27,7 @@ import {
     Check
 } from 'lucide-react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/authContext';
 import { translations } from '../utils/translations';
 import Toast from '../components/Toast';
 
@@ -47,6 +47,7 @@ const ShopPage = () => {
     const [viewMode, setViewMode] = useState('grid');
     const [toast, setToast] = useState({ show: false, type: '', message: '' });
     const [selectedFilters, setSelectedFilters] = useState({ brands: [], colors: [] });
+    const showFilterSidebar = selectedCat !== 'All';
 
     useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
@@ -123,8 +124,16 @@ const ShopPage = () => {
                 </div>
             </header>
 
-            <div style={shopContent}>
-                <aside style={filterSidebar}>
+            <div
+                style={{
+                    ...shopContent,
+                    gridTemplateColumns: showFilterSidebar
+                        ? 'minmax(280px, 320px) minmax(0, 1fr)'
+                        : '1fr'
+                }}
+            >
+                {showFilterSidebar && (
+                    <aside style={filterSidebar}>
                     <div style={fGroup} className="section-shell">
                         <h3 style={fLabel}>Categories</h3>
                         <div style={fTags}>
@@ -189,7 +198,8 @@ const ShopPage = () => {
                         <p style={pDesc}>Get an extra 10% off on all premium electronics this weekend.</p>
                         <button style={pBtn}>View Offer</button>
                     </div>
-                </aside>
+                    </aside>
+                )}
 
                 <main style={productArea}>
                     {loading ? (

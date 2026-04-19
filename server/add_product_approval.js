@@ -1,48 +1,40 @@
-import { Sequelize } from 'sequelize';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const sequelize = new Sequelize({
-    dialect: 'sqlite',
-    storage: path.join(__dirname, 'hub_db.sqlite'),
-    logging: false
-});
+import { sequelize } from './db.js';
 
 async function addProductApprovalColumns() {
     try {
         await sequelize.authenticate();
         console.log('✓ Connected to database');
 
-        try {
-            await sequelize.query(`ALTER TABLE "Products" ADD COLUMN "isApproved" INTEGER DEFAULT 0;`);
+        const queryInterface = sequelize.getQueryInterface();
+        const columns = await queryInterface.describeTable('Products');
+
+        if (!columns.isApproved) {
+            await queryInterface.addColumn('Products', 'isApproved', {
+                type: sequelize.Sequelize.BOOLEAN,
+                defaultValue: false
+            });
             console.log('✅ isApproved column added');
-        } catch (error) {
-            if (!error.message.includes('duplicate column name')) {
-                throw error;
-            }
+        } else {
             console.log('ℹ️ isApproved column already exists');
         }
 
-        try {
-            await sequelize.query(`ALTER TABLE "Products" ADD COLUMN "approvedAt" DATETIME;`);
+        if (!columns.approvedAt) {
+            await queryInterface.addColumn('Products', 'approvedAt', {
+                type: sequelize.Sequelize.DATE,
+                allowNull: true
+            });
             console.log('✅ approvedAt column added');
-        } catch (error) {
-            if (!error.message.includes('duplicate column name')) {
-                throw error;
-            }
+        } else {
             console.log('ℹ️ approvedAt column already exists');
         }
 
-        try {
-            await sequelize.query(`ALTER TABLE "Products" ADD COLUMN "approvedBy" TEXT;`);
+        if (!columns.approvedBy) {
+            await queryInterface.addColumn('Products', 'approvedBy', {
+                type: sequelize.Sequelize.TEXT,
+                allowNull: true
+            });
             console.log('✅ approvedBy column added');
-        } catch (error) {
-            if (!error.message.includes('duplicate column name')) {
-                throw error;
-            }
+        } else {
             console.log('ℹ️ approvedBy column already exists');
         }
 

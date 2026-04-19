@@ -18,7 +18,7 @@ import {
     ArrowLeft,
     Share2
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/authContext';
 import Toast from '../components/Toast';
 
 const ProductDetails = () => {

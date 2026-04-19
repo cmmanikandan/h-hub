@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { Package, Clock, CheckCircle2, ShoppingBag, Star, X } from 'lucide-react';
+import { useAuth } from '../context/authContext';
+import { Package, Clock, CheckCircle2, ShoppingBag, Star, X, Sparkles, ShieldCheck, Repeat } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import ReturnRequests from '../components/ReturnRequests';
@@ -98,8 +98,8 @@ const MyOrders = () => {
             setSuggestedOrder(null);
             setFeedbackData({ product: 0, delivery: 0, comment: '' });
 
-            // Force refresh to remove feedback prompt since product is now rated
-            window.location.reload();
+            await fetchProfile();
+            setSuggestedOrder(null);
         } catch (err) {
             console.error('Feedback error:', err);
             showToast('error', 'Failed to submit feedback. Please try again.');
@@ -286,6 +286,36 @@ const MyOrders = () => {
             <header style={header}>
                 <h1 style={title}><Package size={28} /> My Orders</h1>
             </header>
+
+            <section style={innovationStrip}>
+                <div style={innovationHeader}>
+                    <h2 style={innovationTitle}><Sparkles size={18} /> Post-Delivery Innovations</h2>
+                    <Link to="/innovations" style={innovationHubLink}>Open Hub</Link>
+                </div>
+                <div style={innovationGrid}>
+                    <Link to="/innovations?feature=verification-payment" style={innovationCard}>
+                        <ShieldCheck size={18} color="#7c3aed" />
+                        <div>
+                            <strong>Pay After Verification</strong>
+                            <p style={innovationDesc}>Run OTP, proof, and release workflow for your orders.</p>
+                        </div>
+                    </Link>
+                    <Link to="/innovations?feature=resell" style={innovationCard}>
+                        <Repeat size={18} color="#0f766e" />
+                        <div>
+                            <strong>Neighborhood Resell</strong>
+                            <p style={innovationDesc}>Create local resell listings for delivered items.</p>
+                        </div>
+                    </Link>
+                    <Link to="/innovations?feature=reverse-loyalty" style={innovationCard}>
+                        <Star size={18} color="#16a34a" />
+                        <div>
+                            <strong>Reverse Loyalty</strong>
+                            <p style={innovationDesc}>Award sustainable shopping actions from this order cycle.</p>
+                        </div>
+                    </Link>
+                </div>
+            </section>
 
             <div style={orderList}>
                 {orders.length === 0 ? (
@@ -525,6 +555,13 @@ const MyOrders = () => {
 const container = { maxWidth: '1200px', margin: '0 auto', padding: '2rem' };
 const header = { marginBottom: '2rem' };
 const title = { fontSize: '2rem', fontWeight: 900, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '1rem' };
+const innovationStrip = { background: 'linear-gradient(180deg, #ffffff, #f8fafc)', border: '1px solid var(--glass-border)', borderRadius: '16px', padding: '1rem', marginBottom: '1.5rem' };
+const innovationHeader = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem', gap: '1rem' };
+const innovationTitle = { fontSize: '1rem', fontWeight: 900, color: 'var(--text-main)', margin: 0, display: 'inline-flex', alignItems: 'center', gap: '0.5rem' };
+const innovationHubLink = { fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)' };
+const innovationGrid = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem' };
+const innovationCard = { display: 'flex', gap: '0.75rem', alignItems: 'flex-start', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '0.8rem', color: 'inherit', textDecoration: 'none' };
+const innovationDesc = { margin: '0.2rem 0 0', fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.4 };
 const orderList = { display: 'flex', flexDirection: 'column', gap: '1.5rem' };
 const orderCard = { background: 'var(--glass)', padding: '1.5rem', borderRadius: '20px', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', gap: '1.5rem' };
 const orderImg = { width: '100px', height: '100px', borderRadius: '12px', objectFit: 'cover' };
