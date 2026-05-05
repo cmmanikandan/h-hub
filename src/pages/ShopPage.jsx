@@ -30,6 +30,9 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/authContext';
 import { translations } from '../utils/translations';
 import Toast from '../components/Toast';
+import { products } from '../data/products';
+
+const fallbackCategories = ['All', ...Array.from(new Set(products.map(product => product.category || product.cat).filter(Boolean)))];
 
 const ShopPage = () => {
     const { user, profile, toggleWishlist, addToCart, lang } = useAuth();
@@ -64,11 +67,16 @@ const ShopPage = () => {
                     api.get('/products'),
                     api.get('/categories')
                 ]);
-                setApiProducts(productsRes.data || []);
-                setCategories(['All', ...categoriesRes.data.map(cat => cat.name)]);
+                const remoteProducts = Array.isArray(productsRes.data) && productsRes.data.length > 0 ? productsRes.data : products;
+                const remoteCategories = Array.isArray(categoriesRes.data) && categoriesRes.data.length > 0
+                    ? ['All', ...categoriesRes.data.map(cat => cat.name)]
+                    : fallbackCategories;
+
+                setApiProducts(remoteProducts);
+                setCategories(remoteCategories);
             } catch (error) {
-                setApiProducts([]);
-                setCategories(['All']);
+                setApiProducts(products);
+                setCategories(fallbackCategories);
             } finally {
                 setLoading(false);
             }

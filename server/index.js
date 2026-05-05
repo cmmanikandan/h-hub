@@ -1641,11 +1641,26 @@ app.post('/api/orders', async (req, res) => {
         };
 
         const normalizedUserId = normalizeUuid(orderData.userId || orderData.UserId);
-        if (!normalizedUserId) {
+        const normalizedUserEmail = typeof orderData.userEmail === 'string' ? orderData.userEmail.toLowerCase().trim() : '';
+
+        let resolvedUserId = normalizedUserId;
+        if (resolvedUserId) {
+            const existingUser = await User.findByPk(resolvedUserId);
+            if (!existingUser && normalizedUserEmail) {
+                const userByEmail = await User.findOne({ where: { email: normalizedUserEmail } });
+                resolvedUserId = userByEmail?.id || null;
+            }
+        } else if (normalizedUserEmail) {
+            const userByEmail = await User.findOne({ where: { email: normalizedUserEmail } });
+            resolvedUserId = userByEmail?.id || null;
+        }
+
+        if (!resolvedUserId) {
             return res.status(400).json({ error: 'Valid user ID is required to place an order' });
         }
-        orderData.userId = normalizedUserId;
-        orderData.UserId = normalizedUserId;
+        orderData.UserId = resolvedUserId;
+        delete orderData.userId;
+        delete orderData.userEmail;
 
         orderData.sellerId = normalizeUuid(orderData.sellerId);
         orderData.deliveryManId = normalizeUuid(orderData.deliveryManId);

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import {
     Star,
     ShoppingBag,
@@ -20,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/authContext';
 import Toast from '../components/Toast';
+import { products } from '../data/products';
 
 const ProductDetails = () => {
     const { id } = useParams();
@@ -31,17 +31,30 @@ const ProductDetails = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        const fallbackProduct = products.find(product => String(product.id) === String(id));
+
+        if (fallbackProduct) {
+            setProduct(fallbackProduct);
+            setLoading(false);
+        } else {
+            setLoading(true);
+        }
+
         const fetchProduct = async () => {
             try {
-                setLoading(true);
                 const res = await api.get(`/products/${id}`);
                 setProduct(res.data);
-            } catch (err) {
-                setProduct(null);
+            } catch {
+                if (!fallbackProduct) {
+                    setProduct(null);
+                }
             } finally {
-                setLoading(false);
+                if (!fallbackProduct) {
+                    setLoading(false);
+                }
             }
         };
+
         fetchProduct();
     }, [id]);
 
@@ -60,9 +73,9 @@ const ProductDetails = () => {
 
             <div style={pdGrid}>
                 <div style={gallerySection}>
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={mainImgBox} className="section-shell">
+                    <div style={mainImgBox} className="section-shell">
                         <img src={product.image || product.img} alt={product.name} style={mainImg} />
-                    </motion.div>
+                    </div>
                     <div style={vBadge}><ShieldCheck size={14} /> Certified Authentic</div>
                 </div>
 

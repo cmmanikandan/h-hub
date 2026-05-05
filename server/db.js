@@ -13,7 +13,8 @@ const SQLITE_DB_PATH = path.join(__dirname, 'hub_db.sqlite');
 // 1️⃣ DATABASE CONNECTION SETUP
 // ============================================
 
-const dbDialect = (process.env.DB_DIALECT || 'sqlite').toLowerCase();
+const onlineDbUrl = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL || '';
+const dbDialect = (process.env.DB_DIALECT || (onlineDbUrl ? 'postgres' : 'sqlite')).toLowerCase();
 const isMySQL = dbDialect === 'mysql';
 const isPostgres = dbDialect === 'postgres';
 const isSQLite = !isMySQL && !isPostgres;
@@ -40,12 +41,11 @@ const createSequelize = () => {
     }
 
     if (isPostgres) {
-        const postgresUrl = process.env.SUPABASE_DB_URL || process.env.DATABASE_URL || '';
-        if (!postgresUrl) {
-            throw new Error('DB_DIALECT=postgres requires SUPABASE_DB_URL or DATABASE_URL');
+        if (!onlineDbUrl) {
+            throw new Error('Postgres mode requires DATABASE_URL or SUPABASE_DB_URL');
         }
 
-        return new Sequelize(postgresUrl, {
+        return new Sequelize(onlineDbUrl, {
             dialect: 'postgres',
             logging: false,
             dialectOptions: {
@@ -584,10 +584,12 @@ export const Order = sequelize.define('Order', {
         defaultValue: 0
     },
     sellerId: {
-        type: DataTypes.UUID
+        type: DataTypes.UUID,
+        allowNull: true
     },
     deliveryManId: {
-        type: DataTypes.UUID
+        type: DataTypes.UUID,
+        allowNull: true
     },
     productId: {
         type: DataTypes.INTEGER,
@@ -803,6 +805,16 @@ export const Order = sequelize.define('Order', {
         type: DataTypes.DATE,
         allowNull: true,
         comment: 'When refund was processed'
+    },
+    useSuperCoins: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        comment: 'Whether SuperCoins were used for this order'
+    },
+    superCoinsToRedeem: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        comment: 'Number of SuperCoins redeemed for discount'
     }
 }, {
     timestamps: true,
@@ -1088,8 +1100,8 @@ export const Review = sequelize.define('Review', {
 User.hasMany(Address, { onDelete: 'CASCADE' });
 Address.belongsTo(User);
 
-User.hasMany(Order);
-Order.belongsTo(User, { as: 'user' });
+User.hasMany(Order, { foreignKey: 'UserId' });
+Order.belongsTo(User, { as: 'user', foreignKey: 'UserId' });
 
 Category.hasMany(Product);
 Product.belongsTo(Category);
@@ -1123,6 +1135,7 @@ export const initDB = async () => {
             await sequelize.query('PRAGMA journal_mode = WAL;');
             await sequelize.query('PRAGMA busy_timeout = 30000;');
             await sequelize.query('PRAGMA synchronous = NORMAL;');
+            await sequelize.query('PRAGMA foreign_keys = OFF;');
             console.log('✅ SQLite WAL mode enabled for better concurrency');
         }
 

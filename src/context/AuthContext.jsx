@@ -374,6 +374,7 @@ export const AuthProvider = ({ children }) => {
                 const payload = {
                     UserId: user.id,
                     userId: user.id,
+                    userEmail: user.email,
                     sellerId: orderData.sellerId || null,
                     productName: orderData.name || orderData.productName,
                     productImage: orderData.image || orderData.productImage || orderData.img,

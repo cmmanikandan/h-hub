@@ -83,6 +83,7 @@ const CheckoutPage = () => {
         const addr = profile.addresses.find(a => a.id === selectedAddress);
         const orderData = {
             userId: user.id,
+            userEmail: user?.email || '',
             productId: product.id,
             productName: product.name,
             productImage: product.img || product.image,
@@ -113,6 +114,7 @@ const CheckoutPage = () => {
             receipt: `hhub_${Date.now()}`,
             notes: {
                 userId: user.id,
+                userEmail: user?.email || '',
                 productId: product.id,
                 selectedPayment,
                 quantity: String(quantity)
