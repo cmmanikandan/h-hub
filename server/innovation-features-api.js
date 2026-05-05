@@ -108,7 +108,7 @@ const ensureInnovationTables = async () => {
 
         await sequelize.query(`
             CREATE TABLE IF NOT EXISTS InnovationGroupBuyMembers (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 roomId TEXT NOT NULL,
                 userId TEXT NOT NULL,
                 userName TEXT,
@@ -119,7 +119,7 @@ const ensureInnovationTables = async () => {
 
         await sequelize.query(`
             CREATE TABLE IF NOT EXISTS InnovationDeliveryMissions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 riderId TEXT NOT NULL,
                 missionType TEXT NOT NULL,
                 missionDate TEXT NOT NULL,
@@ -134,7 +134,7 @@ const ensureInnovationTables = async () => {
 
         await sequelize.query(`
             CREATE TABLE IF NOT EXISTS InnovationReturnRiskEvents (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 userId TEXT,
                 productId TEXT NOT NULL,
                 score INTEGER NOT NULL,
@@ -174,7 +174,7 @@ const ensureInnovationTables = async () => {
 
         await sequelize.query(`
             CREATE TABLE IF NOT EXISTS InnovationNegotiations (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 userId TEXT NOT NULL,
                 productId TEXT NOT NULL,
                 basePrice REAL NOT NULL,
@@ -189,7 +189,7 @@ const ensureInnovationTables = async () => {
 
         await sequelize.query(`
             CREATE TABLE IF NOT EXISTS InnovationResellListings (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 sellerUserId TEXT NOT NULL,
                 originalOrderId TEXT NOT NULL,
                 productId TEXT NOT NULL,
@@ -203,7 +203,7 @@ const ensureInnovationTables = async () => {
 
         await sequelize.query(`
             CREATE TABLE IF NOT EXISTS InnovationFamilyWallets (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 ownerUserId TEXT NOT NULL,
                 walletName TEXT NOT NULL,
                 monthlyLimit REAL NOT NULL DEFAULT 0,
@@ -214,7 +214,7 @@ const ensureInnovationTables = async () => {
 
         await sequelize.query(`
             CREATE TABLE IF NOT EXISTS InnovationFamilyWalletMembers (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 walletId INTEGER NOT NULL,
                 userId TEXT NOT NULL,
                 role TEXT NOT NULL,
@@ -227,7 +227,7 @@ const ensureInnovationTables = async () => {
 
         await sequelize.query(`
             CREATE TABLE IF NOT EXISTS InnovationDispatchSnapshots (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 orderId TEXT NOT NULL,
                 routeConfidence REAL NOT NULL,
                 delayProbability REAL NOT NULL,
@@ -239,7 +239,7 @@ const ensureInnovationTables = async () => {
 
         await sequelize.query(`
             CREATE TABLE IF NOT EXISTS InnovationPackagingClaims (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 orderId TEXT NOT NULL,
                 userId TEXT NOT NULL,
                 premium REAL NOT NULL,
@@ -253,7 +253,7 @@ const ensureInnovationTables = async () => {
 
         await sequelize.query(`
             CREATE TABLE IF NOT EXISTS InnovationAuthenticityChain (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 productId TEXT NOT NULL,
                 orderId TEXT,
                 stage TEXT NOT NULL,
@@ -266,7 +266,7 @@ const ensureInnovationTables = async () => {
 
         await sequelize.query(`
             CREATE TABLE IF NOT EXISTS InnovationReverseLoyaltyEvents (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 userId TEXT NOT NULL,
                 eventType TEXT NOT NULL,
                 points INTEGER NOT NULL,
